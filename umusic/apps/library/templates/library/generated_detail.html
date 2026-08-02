@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Generated {{ playlist.activity_kind }} · uMusic{% endblock %}
+{% block content %}
+<h1>{{ playlist.activity_kind|title }} playlist</h1>
+<section class="card"><p>{{ playlist.actual_duration_ms }} ms · requested {{ playlist.requested_duration_minutes }} min · seed {{ playlist.seed }} · {{ playlist.model_version }}</p>
+<form method="post">{% csrf_token %}<button name="action" value="regenerate">Regenerate with next seed</button> <label>or seed <input name="seed" type="number" min="0"></label></form></section>
+<section class="card"><table><thead><tr><th></th><th>Track</th><th>Artist</th><th>Score</th><th>Why</th><th></th></tr></thead><tbody>
+{% for item in items %}<tr><td><button class="play-track" data-track-id="{{ item.track.id }}" data-title="{{ item.track.title }}" data-artist="{{ item.track.artist.name }}" data-stream="{% url 'api-track-stream' item.track.id %}">▶</button></td><td>{{ item.track.title }}</td><td>{{ item.track.artist.name }}</td><td>{{ item.score }}</td><td>{% for reason in item.reasons %}<div>{{ reason.label }} ({{ reason.contribution }})</div>{% endfor %}</td><td><form method="post">{% csrf_token %}<input type="hidden" name="position" value="{{ item.position }}"><button name="action" value="replace">Replace</button></form></td></tr>{% empty %}<tr><td colspan="6">No eligible tracks.</td></tr>{% endfor %}
+</tbody></table></section>
+{% endblock %}

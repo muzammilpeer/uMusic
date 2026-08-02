@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Generate playlist · uMusic{% endblock %}
+{% block content %}
+<h1>Generate activity playlist</h1>
+<section class="card"><form method="post">{% csrf_token %}
+<p><label>Activity <select name="activity_id" required>{% for activity in activities %}<option value="{{ activity.id }}">{{ activity.name }}</option>{% endfor %}</select></label></p>
+<p><label>Place <select name="geofence_id"><option value="">No place</option>{% for place in places %}<option value="{{ place.id }}">{{ place.name }}</option>{% endfor %}</select></label></p>
+<p><label>Duration (minutes) <input type="number" name="duration_minutes" min="5" max="1440" value="60" required></label></p>
+<p><label>Energy <input type="range" name="target_energy" min="0" max="1" step="0.05" value="0.7"></label></p>
+<p><label>Discovery <input type="range" name="discovery" min="0" max="1" step="0.05" value="0.2"></label></p>
+<p><label>Deterministic seed <input type="number" name="seed" min="0" value="41728" required></label></p>
+<button type="submit">Generate playlist</button></form></section>
+<section class="card"><h2>Generated versions</h2>{% for playlist in playlists %}<p><a href="{% url 'library:generated-detail' playlist.id %}">{{ playlist.activity_kind }} · {{ playlist.requested_duration_minutes }} min · seed {{ playlist.seed }}</a></p>{% empty %}<p>No generated playlists yet.</p>{% endfor %}</section>
+{% endblock %}

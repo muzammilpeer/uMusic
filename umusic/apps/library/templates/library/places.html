@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}Places · uMusic{% endblock %}
+{% block content %}
+<h1>Named places</h1>
+<section class="card"><h2>Add place</h2><p class="muted">Coordinates stay on this place record. Listening events receive only its opaque ID.</p>
+<form method="post">{% csrf_token %}<input type="hidden" name="action" value="create">
+<p><label>Name <input name="name" required></label></p><p><label>Latitude <input name="latitude" type="number" min="-90" max="90" step="0.000001" required></label> <label>Longitude <input name="longitude" type="number" min="-180" max="180" step="0.000001" required></label></p>
+<p><label>Radius metres <input name="radius_m" type="number" min="25" max="100000" value="200"></label></p>
+<p><label>Privacy <select name="privacy"><option value="manual">Manual selection only</option><option value="location">Allow future device matching</option></select></label></p><button type="submit">Save place</button></form></section>
+<section class="card"><h2>Saved places</h2>{% for place in places %}<p><strong>{{ place.name }}</strong> · {{ place.get_privacy_display }} · {{ place.radius_m }} m <form method="post" style="display:inline">{% csrf_token %}<input type="hidden" name="place_id" value="{{ place.id }}"><button name="action" value="forget">Forget learning</button> <button name="action" value="delete">Delete coordinates</button></form></p>{% empty %}<p>No named places yet.</p>{% endfor %}</section>
+{% endblock %}

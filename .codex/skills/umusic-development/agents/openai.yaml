@@ -1,0 +1,4 @@
+interface:
+  display_name: "uMusic Development"
+  short_description: "Develop and validate the uMusic server and apps"
+  default_prompt: "Use $umusic-development to continue developing and validating this uMusic project."

@@ -1,0 +1,16 @@
+.env
+.git
+.github
+.mypy_cache
+.pytest_cache
+.ruff_cache
+.venv
+__pycache__
+*.pyc
+*.sqlite3
+coverage.xml
+docs
+htmlcov
+media
+quarantine
+

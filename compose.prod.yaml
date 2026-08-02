@@ -1,0 +1,98 @@
+x-app: &app
+  build:
+    context: .
+  env_file: ${UMUSIC_ENV_FILE:-.env.prod}
+  environment:
+    DJANGO_DEBUG: "false"
+    DJANGO_SECURE_COOKIES: "true"
+    DATABASE_URL: postgresql://umusic:${POSTGRES_PASSWORD}@postgres:5432/umusic
+    REDIS_URL: redis://redis:6379/0
+    CELERY_BROKER_URL: redis://redis:6379/1
+    CELERY_RESULT_BACKEND: redis://redis:6379/2
+    UMUSIC_MEDIA_ROOT: /data/media
+    UMUSIC_QUARANTINE_ROOT: /data/quarantine
+    UMUSIC_STORAGE_BACKEND: ${UMUSIC_STORAGE_BACKEND:-local}
+    UMUSIC_USE_INTERNAL_REDIRECT: "true"
+    UMUSIC_INTERNAL_MEDIA_PREFIX: /protected-media/
+    UMUSIC_REMOTE_IMPORT_ENABLED: ${UMUSIC_REMOTE_IMPORT_ENABLED:-true}
+    UMUSIC_REMOTE_IMPORT_MAX_ITEMS: ${UMUSIC_REMOTE_IMPORT_MAX_ITEMS:-50}
+    UMUSIC_YOUTUBE_IMPORT_ENABLED: ${UMUSIC_YOUTUBE_IMPORT_ENABLED:-false}
+  volumes:
+    - ${UMUSIC_MEDIA_PATH:-./data/media}:/data/media
+    - ${UMUSIC_QUARANTINE_PATH:-./data/quarantine}:/data/quarantine
+    - ${UMUSIC_BACKUP_PATH:-./data/backups}:/backups
+  depends_on:
+    postgres:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+  restart: unless-stopped
+
+services:
+  proxy:
+    image: nginx:1.28.0-alpine
+    expose: ["8080"]
+    volumes:
+      - ./deploy/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ${UMUSIC_MEDIA_PATH:-./data/media}:/data/media:ro
+    depends_on:
+      web:
+        condition: service_healthy
+    restart: unless-stopped
+
+  tunnel:
+    image: cloudflare/cloudflared:2026.7.3
+    command: tunnel --no-autoupdate --metrics 0.0.0.0:20241 run --token ${CLOUDFLARE_TUNNEL_TOKEN}
+    depends_on:
+      - proxy
+    restart: unless-stopped
+
+  web:
+    <<: *app
+    command: sh -c "python manage.py migrate --noinput && gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 3 --access-logfile -"
+    expose: ["8000"]
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8000/health/ready/"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  worker:
+    <<: *app
+    command: celery -A config worker --loglevel=INFO
+
+  scheduler:
+    <<: *app
+    command: celery -A config beat --loglevel=INFO
+
+  postgres:
+    image: postgres:17.6-bookworm
+    environment:
+      POSTGRES_DB: umusic
+      POSTGRES_USER: umusic
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres-prod:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U umusic -d umusic"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  redis:
+    image: redis:8.2.1-alpine
+    command: redis-server --appendonly yes --loglevel warning
+    volumes:
+      - redis-prod:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+volumes:
+  postgres-prod:
+  redis-prod:

@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Learning · uMusic{% endblock %}
+{% block content %}
+<h1>Explainable learning</h1>
+<section class="card"><p>Learning summaries are derived from immutable listening events and can be reset or rebuilt safely.</p>
+{% if latest_run %}<p class="muted">Latest: {{ latest_run.status }} · {{ latest_run.configuration.version }} · digest {{ latest_run.evidence_digest|slice:":12" }}</p>{% endif %}
+<form method="post" style="display:inline">{% csrf_token %}<button name="action" value="rebuild">Rebuild learning</button></form>
+<form method="post" style="display:inline">{% csrf_token %}<button name="action" value="reset">Reset derived learning</button></form></section>
+<section class="card"><h2>Affinities</h2><table><thead><tr><th>Target</th><th>Context</th><th>Score</th><th>Confidence</th><th>Evidence</th><th>Version</th></tr></thead><tbody>
+{% for affinity in affinities %}<tr><td>{{ affinity.get_target_type_display }} · {{ affinity.target_label }}</td><td>{{ affinity.get_context_type_display }}{% if affinity.context_key %}: {{ affinity.context_key }}{% endif %}</td><td>{{ affinity.score }}</td><td>{{ affinity.confidence }}</td><td><details><summary>{{ affinity.sample_count }} sample{{ affinity.sample_count|pluralize }}</summary><pre>{{ affinity.evidence }}</pre></details></td><td>{{ affinity.configuration.version }}</td></tr>{% empty %}<tr><td colspan="6">No learning yet. Listen to music, then rebuild.</td></tr>{% endfor %}
+</tbody></table></section>
+{% endblock %}

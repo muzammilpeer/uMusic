@@ -1,0 +1,111 @@
+[build-system]
+requires = ["setuptools==80.9.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "umusic"
+version = "0.1.0"
+description = "Private, self-hosted, context-aware MP3 player"
+readme = "README.md"
+requires-python = ">=3.13,<3.14"
+dependencies = [
+  "celery[redis]==5.5.3",
+  "Django==5.2.7",
+  "django-environ==0.12.0",
+  "djangorestframework==3.16.1",
+  "gunicorn==23.0.0",
+  "mutagen==1.47.0",
+  "psycopg[binary]==3.2.10",
+  "redis==5.2.1",
+  "yt-dlp==2026.6.9",
+]
+
+[project.optional-dependencies]
+dev = [
+  "coverage[toml]==7.10.7",
+  "django-stubs[compatible-mypy]==5.2.5",
+  "mypy==1.18.2",
+  "pre-commit==4.3.0",
+  "pytest==8.4.2",
+  "pytest-django==4.11.1",
+  "ruff==0.13.2",
+]
+
+[tool.setuptools.packages.find]
+include = ["config*", "umusic*"]
+
+[tool.setuptools.package-data]
+"umusic.apps.accounts" = ["templates/**/*.html"]
+"umusic.apps.library" = ["templates/**/*.html"]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings"
+python_files = ["test_*.py", "*_tests.py"]
+addopts = "--strict-markers --strict-config"
+
+[tool.coverage.run]
+branch = true
+source = ["config", "umusic"]
+
+[tool.coverage.report]
+fail_under = 85
+show_missing = true
+skip_covered = true
+
+[tool.ruff]
+target-version = "py313"
+line-length = 100
+extend-exclude = ["*/migrations/*"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "DJ", "RUF"]
+ignore = ["RUF012"]
+
+[tool.ruff.lint.per-file-ignores]
+"*/migrations/*.py" = ["E501"]
+
+[tool.ruff.format]
+quote-style = "double"
+
+[tool.mypy]
+python_version = "3.13"
+plugins = ["mypy_django_plugin.main"]
+strict = true
+exclude = [".*/migrations/.*"]
+
+[[tool.mypy.overrides]]
+module = ["celery.*", "environ", "redis.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["rest_framework", "rest_framework.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = [
+  "umusic.apps.accounts.api",
+  "umusic.apps.accounts.authentication",
+  "umusic.apps.accounts.permissions",
+  "umusic.apps.imports.serializers",
+  "umusic.apps.imports.views",
+  "umusic.apps.playback.views",
+  "umusic.apps.playlists.views",
+  "umusic.apps.events.serializers",
+  "umusic.apps.events.views",
+  "umusic.apps.contexts.serializers",
+  "umusic.apps.contexts.views",
+  "umusic.apps.recommendations.serializers",
+  "umusic.apps.recommendations.views",
+  "umusic.apps.recommendations.tasks",
+  "umusic.apps.recommendations.generation_serializers",
+  "umusic.apps.recommendations.generation_views",
+  "umusic.apps.imports.adapter_views",
+  "umusic.apps.imports.tasks",
+  "umusic.apps.library.api_views",
+  "umusic.apps.operations.tasks",
+  "umusic.apps.sync.views",
+]
+disable_error_code = ["misc"]
+
+[tool.django-stubs]
+django_settings_module = "config.settings"

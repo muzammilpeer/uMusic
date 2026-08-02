@@ -1,0 +1,754 @@
+{
+  "builtTestProducts" : [
+    {
+      "binaryPath" : "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCorePackageTests.xctest/Contents/MacOS/UMusicCorePackageTests",
+      "packagePath" : "/Users/muzammilpeer/Git/uMusic/clients/UMusic",
+      "productName" : "UMusicCorePackageTests"
+    }
+  ],
+  "copyCommands" : {
+
+  },
+  "explicitTargetDependencyImportCheckingMode" : {
+    "none" : {
+
+    }
+  },
+  "generatedSourceTargetSet" : [
+
+  ],
+  "pluginDescriptions" : [
+
+  ],
+  "swiftCommands" : {
+    "C.UMusicCore-arm64-apple-macosx-debug.module" : {
+      "executable" : "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc",
+      "fileList" : "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCore.build/sources",
+      "importPath" : "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/Modules",
+      "inputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/muzammilpeer/Git/uMusic/clients/UMusic/UMusic/APIClient.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/muzammilpeer/Git/uMusic/clients/UMusic/UMusic/EventSyncService.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/muzammilpeer/Git/uMusic/clients/UMusic/UMusic/Models.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/muzammilpeer/Git/uMusic/clients/UMusic/UMusic/OfflineAPI.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/muzammilpeer/Git/uMusic/clients/UMusic/UMusic/OfflineManager.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/muzammilpeer/Git/uMusic/clients/UMusic/UMusic/OfflineModels.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/muzammilpeer/Git/uMusic/clients/UMusic/UMusic/QueueStore.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/muzammilpeer/Git/uMusic/clients/UMusic/UMusic/WorkoutAPI.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/muzammilpeer/Git/uMusic/clients/UMusic/UMusic/WorkoutModels.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCore.build/sources"
+        }
+      ],
+      "isLibrary" : true,
+      "moduleName" : "UMusicCore",
+      "moduleOutputPath" : "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/Modules/UMusicCore.swiftmodule",
+      "objects" : [
+        "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCore.build/APIClient.swift.o",
+        "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCore.build/EventSyncService.swift.o",
+        "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCore.build/Models.swift.o",
+        "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCore.build/OfflineAPI.swift.o",
+        "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCore.build/OfflineManager.swift.o",
+        "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCore.build/OfflineModels.swift.o",
+        "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCore.build/QueueStore.swift.o",
+        "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCore.build/WorkoutAPI.swift.o",
+        "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCore.build/WorkoutModels.swift.o"
+      ],
+      "otherArguments" : [
+        "-target",
+        "arm64-apple-macosx15.0",
+        "-incremental",
+        "-enable-batch-mode",
+        "-serialize-diagnostics",
+        "-index-store-path",
+        "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/index/store",
+        "-Onone",
+        "-enable-testing",
+        "-j10",
+        "-DSWIFT_PACKAGE",
+        "-DDEBUG",
+        "-DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE",
+        "-module-cache-path",
+        "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/ModuleCache",
+        "-parseable-output",
+        "-parse-as-library",
+        "-emit-objc-header",
+        "-emit-objc-header-path",
+        "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCore.build/include/UMusicCore-Swift.h",
+        "-swift-version",
+        "5",
+        "-plugin-path",
+        "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing",
+        "-sdk",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+        "-F",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "-I",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+        "-L",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+        "-g",
+        "-Xcc",
+        "-isysroot",
+        "-Xcc",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+        "-Xcc",
+        "-F",
+        "-Xcc",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "-Xcc",
+        "-fPIC",
+        "-Xcc",
+        "-g",
+        "-package-name",
+        "umusic"
+      ],
+      "outputFileMapPath" : "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCore.build/output-file-map.json",
+      "outputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCore.build/APIClient.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCore.build/EventSyncService.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCore.build/Models.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCore.build/OfflineAPI.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCore.build/OfflineManager.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCore.build/OfflineModels.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCore.build/QueueStore.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCore.build/WorkoutAPI.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCore.build/WorkoutModels.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/Modules/UMusicCore.swiftmodule"
+        }
+      ],
+      "prepareForIndexing" : false,
+      "sources" : [
+        "/Users/muzammilpeer/Git/uMusic/clients/UMusic/UMusic/APIClient.swift",
+        "/Users/muzammilpeer/Git/uMusic/clients/UMusic/UMusic/EventSyncService.swift",
+        "/Users/muzammilpeer/Git/uMusic/clients/UMusic/UMusic/Models.swift",
+        "/Users/muzammilpeer/Git/uMusic/clients/UMusic/UMusic/OfflineAPI.swift",
+        "/Users/muzammilpeer/Git/uMusic/clients/UMusic/UMusic/OfflineManager.swift",
+        "/Users/muzammilpeer/Git/uMusic/clients/UMusic/UMusic/OfflineModels.swift",
+        "/Users/muzammilpeer/Git/uMusic/clients/UMusic/UMusic/QueueStore.swift",
+        "/Users/muzammilpeer/Git/uMusic/clients/UMusic/UMusic/WorkoutAPI.swift",
+        "/Users/muzammilpeer/Git/uMusic/clients/UMusic/UMusic/WorkoutModels.swift"
+      ],
+      "tempsPath" : "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCore.build",
+      "wholeModuleOptimization" : false
+    },
+    "C.UMusicCorePackageTests-arm64-apple-macosx-debug.module" : {
+      "executable" : "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc",
+      "fileList" : "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCorePackageTests.build/sources",
+      "importPath" : "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/Modules",
+      "inputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCorePackageTests.derived/runner.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/Modules/UMusicCoreTests.swiftmodule"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCorePackageTests.build/sources"
+        }
+      ],
+      "isLibrary" : true,
+      "moduleName" : "UMusicCorePackageTests",
+      "moduleOutputPath" : "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/Modules/UMusicCorePackageTests.swiftmodule",
+      "objects" : [
+        "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCorePackageTests.build/runner.swift.o"
+      ],
+      "otherArguments" : [
+        "-target",
+        "arm64-apple-macosx15.0",
+        "-incremental",
+        "-enable-batch-mode",
+        "-serialize-diagnostics",
+        "-index-store-path",
+        "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/index/store",
+        "-Onone",
+        "-enable-testing",
+        "-Xfrontend",
+        "-enable-cross-import-overlays",
+        "-j10",
+        "-DSWIFT_PACKAGE",
+        "-DDEBUG",
+        "-DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE",
+        "-module-cache-path",
+        "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/ModuleCache",
+        "-parseable-output",
+        "-parse-as-library",
+        "-emit-objc-header",
+        "-emit-objc-header-path",
+        "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCorePackageTests.build/include/UMusicCorePackageTests-Swift.h",
+        "-plugin-path",
+        "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing",
+        "-sdk",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+        "-F",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "-I",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+        "-L",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+        "-g",
+        "-Xcc",
+        "-isysroot",
+        "-Xcc",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+        "-Xcc",
+        "-F",
+        "-Xcc",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "-Xcc",
+        "-fPIC",
+        "-Xcc",
+        "-g",
+        "-package-name",
+        "umusic"
+      ],
+      "outputFileMapPath" : "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCorePackageTests.build/output-file-map.json",
+      "outputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCorePackageTests.build/runner.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/Modules/UMusicCorePackageTests.swiftmodule"
+        }
+      ],
+      "prepareForIndexing" : false,
+      "sources" : [
+        "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCorePackageTests.derived/runner.swift"
+      ],
+      "tempsPath" : "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCorePackageTests.build",
+      "wholeModuleOptimization" : false
+    },
+    "C.UMusicCoreTests-arm64-apple-macosx-debug.module" : {
+      "executable" : "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc",
+      "fileList" : "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCoreTests.build/sources",
+      "importPath" : "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/Modules",
+      "inputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/muzammilpeer/Git/uMusic/clients/UMusic/Tests/UMusicCoreTests/UMusicCoreTests.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/Modules/UMusicCore.swiftmodule"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCoreTests.build/sources"
+        }
+      ],
+      "isLibrary" : true,
+      "moduleName" : "UMusicCoreTests",
+      "moduleOutputPath" : "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/Modules/UMusicCoreTests.swiftmodule",
+      "objects" : [
+        "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCoreTests.build/UMusicCoreTests.swift.o"
+      ],
+      "otherArguments" : [
+        "-target",
+        "arm64-apple-macosx15.0",
+        "-incremental",
+        "-enable-batch-mode",
+        "-serialize-diagnostics",
+        "-index-store-path",
+        "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/index/store",
+        "-Onone",
+        "-enable-testing",
+        "-Xfrontend",
+        "-enable-cross-import-overlays",
+        "-j10",
+        "-DSWIFT_PACKAGE",
+        "-DDEBUG",
+        "-DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE",
+        "-module-cache-path",
+        "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/ModuleCache",
+        "-parseable-output",
+        "-parse-as-library",
+        "-swift-version",
+        "5",
+        "-plugin-path",
+        "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing",
+        "-sdk",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+        "-F",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "-I",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+        "-L",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+        "-g",
+        "-Xcc",
+        "-isysroot",
+        "-Xcc",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+        "-Xcc",
+        "-F",
+        "-Xcc",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "-Xcc",
+        "-fPIC",
+        "-Xcc",
+        "-g",
+        "-package-name",
+        "umusic"
+      ],
+      "outputFileMapPath" : "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCoreTests.build/output-file-map.json",
+      "outputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCoreTests.build/UMusicCoreTests.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/Modules/UMusicCoreTests.swiftmodule"
+        }
+      ],
+      "prepareForIndexing" : false,
+      "sources" : [
+        "/Users/muzammilpeer/Git/uMusic/clients/UMusic/Tests/UMusicCoreTests/UMusicCoreTests.swift"
+      ],
+      "tempsPath" : "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCoreTests.build",
+      "wholeModuleOptimization" : false
+    }
+  },
+  "swiftFrontendCommands" : {
+
+  },
+  "swiftTargetScanArgs" : {
+    "UMusicCore" : [
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc",
+      "-module-name",
+      "UMusicCore",
+      "-package-name",
+      "umusic",
+      "-c",
+      "/Users/muzammilpeer/Git/uMusic/clients/UMusic/UMusic/APIClient.swift",
+      "/Users/muzammilpeer/Git/uMusic/clients/UMusic/UMusic/EventSyncService.swift",
+      "/Users/muzammilpeer/Git/uMusic/clients/UMusic/UMusic/Models.swift",
+      "/Users/muzammilpeer/Git/uMusic/clients/UMusic/UMusic/OfflineAPI.swift",
+      "/Users/muzammilpeer/Git/uMusic/clients/UMusic/UMusic/OfflineManager.swift",
+      "/Users/muzammilpeer/Git/uMusic/clients/UMusic/UMusic/OfflineModels.swift",
+      "/Users/muzammilpeer/Git/uMusic/clients/UMusic/UMusic/QueueStore.swift",
+      "/Users/muzammilpeer/Git/uMusic/clients/UMusic/UMusic/WorkoutAPI.swift",
+      "/Users/muzammilpeer/Git/uMusic/clients/UMusic/UMusic/WorkoutModels.swift",
+      "-I",
+      "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/Modules",
+      "-target",
+      "arm64-apple-macosx15.0",
+      "-incremental",
+      "-enable-batch-mode",
+      "-serialize-diagnostics",
+      "-index-store-path",
+      "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/index/store",
+      "-Onone",
+      "-enable-testing",
+      "-j10",
+      "-DSWIFT_PACKAGE",
+      "-DDEBUG",
+      "-DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE",
+      "-module-cache-path",
+      "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/ModuleCache",
+      "-parseable-output",
+      "-parse-as-library",
+      "-emit-objc-header",
+      "-emit-objc-header-path",
+      "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCore.build/include/UMusicCore-Swift.h",
+      "-swift-version",
+      "5",
+      "-plugin-path",
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing",
+      "-sdk",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+      "-F",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+      "-I",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+      "-L",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+      "-g",
+      "-Xcc",
+      "-isysroot",
+      "-Xcc",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+      "-Xcc",
+      "-F",
+      "-Xcc",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+      "-Xcc",
+      "-fPIC",
+      "-Xcc",
+      "-g",
+      "-package-name",
+      "umusic",
+      "-driver-use-frontend-path",
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc"
+    ],
+    "UMusicCorePackageTests" : [
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc",
+      "-module-name",
+      "UMusicCorePackageTests",
+      "-package-name",
+      "umusic",
+      "-c",
+      "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCorePackageTests.derived/runner.swift",
+      "-I",
+      "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/Modules",
+      "-target",
+      "arm64-apple-macosx15.0",
+      "-incremental",
+      "-enable-batch-mode",
+      "-serialize-diagnostics",
+      "-index-store-path",
+      "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/index/store",
+      "-Onone",
+      "-enable-testing",
+      "-Xfrontend",
+      "-enable-cross-import-overlays",
+      "-j10",
+      "-DSWIFT_PACKAGE",
+      "-DDEBUG",
+      "-DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE",
+      "-module-cache-path",
+      "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/ModuleCache",
+      "-parseable-output",
+      "-parse-as-library",
+      "-emit-objc-header",
+      "-emit-objc-header-path",
+      "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCorePackageTests.build/include/UMusicCorePackageTests-Swift.h",
+      "-plugin-path",
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing",
+      "-sdk",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+      "-F",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+      "-I",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+      "-L",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+      "-g",
+      "-Xcc",
+      "-isysroot",
+      "-Xcc",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+      "-Xcc",
+      "-F",
+      "-Xcc",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+      "-Xcc",
+      "-fPIC",
+      "-Xcc",
+      "-g",
+      "-package-name",
+      "umusic",
+      "-driver-use-frontend-path",
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc"
+    ],
+    "UMusicCoreTests" : [
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc",
+      "-module-name",
+      "UMusicCoreTests",
+      "-package-name",
+      "umusic",
+      "-c",
+      "/Users/muzammilpeer/Git/uMusic/clients/UMusic/Tests/UMusicCoreTests/UMusicCoreTests.swift",
+      "-I",
+      "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/Modules",
+      "-target",
+      "arm64-apple-macosx15.0",
+      "-incremental",
+      "-enable-batch-mode",
+      "-serialize-diagnostics",
+      "-index-store-path",
+      "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/index/store",
+      "-Onone",
+      "-enable-testing",
+      "-Xfrontend",
+      "-enable-cross-import-overlays",
+      "-j10",
+      "-DSWIFT_PACKAGE",
+      "-DDEBUG",
+      "-DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE",
+      "-module-cache-path",
+      "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/ModuleCache",
+      "-parseable-output",
+      "-parse-as-library",
+      "-swift-version",
+      "5",
+      "-plugin-path",
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing",
+      "-sdk",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+      "-F",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+      "-I",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+      "-L",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+      "-g",
+      "-Xcc",
+      "-isysroot",
+      "-Xcc",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+      "-Xcc",
+      "-F",
+      "-Xcc",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+      "-Xcc",
+      "-fPIC",
+      "-Xcc",
+      "-g",
+      "-package-name",
+      "umusic",
+      "-driver-use-frontend-path",
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc"
+    ]
+  },
+  "targetDependencyMap" : {
+    "UMusicCore" : [
+
+    ],
+    "UMusicCorePackageTests" : [
+      "UMusicCoreTests",
+      "UMusicCore"
+    ],
+    "UMusicCoreTests" : [
+      "UMusicCore"
+    ]
+  },
+  "testDiscoveryCommands" : {
+
+  },
+  "testEntryPointCommands" : {
+    "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCorePackageTests.derived/runner.swift" : {
+      "inputs" : [
+
+      ],
+      "outputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCorePackageTests.derived/runner.swift"
+        }
+      ]
+    }
+  },
+  "traitConfiguration" : {
+    "default" : {
+
+    }
+  },
+  "writeCommands" : {
+    "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCore.build/sources" : {
+      "alwaysOutOfDate" : false,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<sources-file-list>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/muzammilpeer/Git/uMusic/clients/UMusic/UMusic/APIClient.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/muzammilpeer/Git/uMusic/clients/UMusic/UMusic/EventSyncService.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/muzammilpeer/Git/uMusic/clients/UMusic/UMusic/Models.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/muzammilpeer/Git/uMusic/clients/UMusic/UMusic/OfflineAPI.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/muzammilpeer/Git/uMusic/clients/UMusic/UMusic/OfflineManager.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/muzammilpeer/Git/uMusic/clients/UMusic/UMusic/OfflineModels.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/muzammilpeer/Git/uMusic/clients/UMusic/UMusic/QueueStore.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/muzammilpeer/Git/uMusic/clients/UMusic/UMusic/WorkoutAPI.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/muzammilpeer/Git/uMusic/clients/UMusic/UMusic/WorkoutModels.swift"
+        }
+      ],
+      "outputFilePath" : "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCore.build/sources"
+    },
+    "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCorePackageTests.build/sources" : {
+      "alwaysOutOfDate" : false,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<sources-file-list>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCorePackageTests.derived/runner.swift"
+        }
+      ],
+      "outputFilePath" : "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCorePackageTests.build/sources"
+    },
+    "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCorePackageTests.product/Objects.LinkFileList" : {
+      "alwaysOutOfDate" : false,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<link-file-list>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCore.build/APIClient.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCore.build/EventSyncService.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCore.build/Models.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCore.build/OfflineAPI.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCore.build/OfflineManager.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCore.build/OfflineModels.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCore.build/QueueStore.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCore.build/WorkoutAPI.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCore.build/WorkoutModels.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCorePackageTests.build/runner.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCoreTests.build/UMusicCoreTests.swift.o"
+        }
+      ],
+      "outputFilePath" : "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCorePackageTests.product/Objects.LinkFileList"
+    },
+    "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCoreTests.build/sources" : {
+      "alwaysOutOfDate" : false,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<sources-file-list>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/muzammilpeer/Git/uMusic/clients/UMusic/Tests/UMusicCoreTests/UMusicCoreTests.swift"
+        }
+      ],
+      "outputFilePath" : "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCoreTests.build/sources"
+    },
+    "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt" : {
+      "alwaysOutOfDate" : true,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<swift-get-version>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc"
+        }
+      ],
+      "outputFilePath" : "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt"
+    }
+  }
+}

@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}uMusic{% endblock %}</title>
+    <style>
+      :root { color-scheme: dark; font-family: system-ui, sans-serif; background: #11131a; color: #f4f5f7; }
+      body { margin: 0; padding-bottom: 110px; }
+      nav { display: flex; gap: 1rem; align-items: center; padding: 1rem 1.5rem; background: #1a1d27; overflow-x: auto; }
+      nav a { color: #b8c8ff; text-decoration: none; }
+      nav .spacer { flex: 1; }
+      main { max-width: 1100px; margin: 0 auto; padding: 1.5rem; }
+      .card { background: #1a1d27; border: 1px solid #2d3242; border-radius: 12px; padding: 1rem; margin-bottom: 1rem; }
+      table { width: 100%; border-collapse: collapse; }
+      th, td { padding: .75rem; border-bottom: 1px solid #303544; text-align: left; }
+      button, input { font: inherit; }
+      button { padding: .6rem 1rem; border: 0; border-radius: 8px; background: #6d8cff; color: #08102b; font-weight: 700; cursor: pointer; }
+      button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid #ffd166; outline-offset: 2px; }
+      .error { color: #ff9c9c; }
+      .success { color: #91e6aa; }
+      .muted { color: #aeb4c3; }
+      a { color: #b8c8ff; }
+      .search { display: flex; gap: .5rem; margin-bottom: 1rem; }
+      .search input { flex: 1; padding: .7rem; border-radius: 8px; border: 1px solid #3a4052; background: #171a23; color: inherit; }
+      #player { position: fixed; inset: auto 0 0; z-index: 10; display: flex; gap: 1rem; align-items: center; padding: .8rem 1.5rem; background: #1a1d27; border-top: 1px solid #3a4052; }
+      #player-meta { min-width: 180px; }
+      #player audio { flex: 1; }
+      @media (max-width: 700px) { table { display: block; overflow-x: auto; } main { padding: .75rem; } #player { flex-wrap: wrap; padding: .5rem; } #player audio { min-width: 100%; order: 2; } }
+    </style>
+  </head>
+  <body>
+    <a href="#main-content" style="position:absolute;left:-9999px">Skip to content</a>
+    <nav>
+      <strong>uMusic</strong>
+      {% if user.is_authenticated %}
+        <a href="{% url 'library:index' %}">Library</a>
+        <a href="{% url 'library:imports' %}">Imports</a>
+        <a href="{% url 'library:events' %}">Listening history</a>
+        <a href="{% url 'library:context-setup' %}">Session setup</a>
+        <a href="{% url 'library:places' %}">Places</a>
+        <a href="{% url 'library:learning' %}">Learning</a>
+        <a href="{% url 'library:generated-playlists' %}">Generate</a>
+        <a href="{% url 'library:adapter-inbox' %}">Adapters</a>
+        <a href="{% url 'library:operations' %}">Operations</a>
+        <a href="{% url 'library:evaluation' %}">Evaluation</a>
+        <a href="{% url 'library:privacy' %}">Privacy</a>
+        <a href="{% url 'library:devices' %}">Devices</a>
+        <span class="spacer"></span>
+        <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button type="submit">Log out</button></form>
+      {% endif %}
+    </nav>
+    <main id="main-content">
+      {% for message in messages %}<p class="{% if message.tags == 'error' %}error{% else %}success{% endif %}">{{ message }}</p>{% endfor %}
+      {% block content %}{% endblock %}
+    </main>
+    {% if user.is_authenticated %}
+      <section id="player" aria-label="Music player">
+        <div id="player-meta"><strong id="player-title">Choose a track</strong><br><span id="player-artist" class="muted"></span></div>
+        <button id="player-previous" type="button" aria-label="Previous">⏮</button>
+        <audio id="audio-player" controls preload="metadata"></audio>
+        <button id="player-next" type="button" aria-label="Next">⏭</button>
+        <button id="player-like" type="button" aria-label="Like">♡</button>
+        <button id="player-dislike" type="button" aria-label="Dislike">⊘</button>
+        <button id="player-remove" type="button" aria-label="Remove from queue">✕</button>
+      </section>
+      <script>
+        (() => {
+          const key = "umusic.player.v1";
+          const eventKey = "umusic.events.pending.v1";
+          const contextKey = "umusic.context.v1";
+          const rejectedEventKey = "umusic.events.rejected.v1";
+          const audio = document.querySelector("#audio-player");
+          let state = JSON.parse(localStorage.getItem(key) || '{"queue":[],"index":0,"position":0}');
+          const uuid = () => {
+            if (typeof crypto.randomUUID === "function") return crypto.randomUUID();
+            const bytes = new Uint8Array(16);
+            crypto.getRandomValues(bytes);
+            bytes[6] = (bytes[6] & 15) | 64;
+            bytes[8] = (bytes[8] & 63) | 128;
+            return [...bytes].map((byte, index) => ([4, 6, 8, 10].includes(index) ? "-" : "") + byte.toString(16).padStart(2, "0")).join("");
+          };
+          let pendingEvents = JSON.parse(localStorage.getItem(eventKey) || "[]").filter(event => event.client_event_id && event.playback_id && event.track_id);
+          localStorage.setItem(eventKey, JSON.stringify(pendingEvents));
+          let lastHeartbeat = 0;
+          let switchingTrack = false;
+          const save = () => localStorage.setItem(key, JSON.stringify(state));
+          const current = () => state.queue[state.index];
+          const csrf = () => document.cookie.split("; ").find(row => row.startsWith("csrftoken="))?.split("=")[1] || "";
+          const flushEvents = async () => {
+            if (!pendingEvents.length || !navigator.onLine) return;
+            const batch = pendingEvents.slice(0, 100);
+            try {
+              const response = await fetch("{% url 'api-event-batch' %}", {method: "POST", headers: {"Content-Type": "application/json", "X-CSRFToken": csrf()}, body: JSON.stringify({events: batch})});
+              if (response.ok) { pendingEvents.splice(0, batch.length); localStorage.setItem(eventKey, JSON.stringify(pendingEvents)); if (pendingEvents.length) flushEvents(); }
+              else if (response.status >= 400 && response.status < 500) {
+                const rejected = JSON.parse(localStorage.getItem(rejectedEventKey) || "[]");
+                localStorage.setItem(rejectedEventKey, JSON.stringify(rejected.concat(batch).slice(-500)));
+                pendingEvents.splice(0, batch.length); localStorage.setItem(eventKey, JSON.stringify(pendingEvents));
+              }
+            } catch (_) { /* Retained locally for the next retry. */ }
+          };
+          const emit = (eventType, listenedMsDelta = 0, metadata = {}) => {
+            const item = current();
+            if (!item) return;
+            if (!item.playbackId) { item.playbackId = uuid(); save(); }
+            const context = JSON.parse(localStorage.getItem(contextKey) || "null");
+            pendingEvents.push({client_event_id: uuid(), playback_id: item.playbackId, track_id: item.id, context_snapshot_id: context?.id || null, event_type: eventType, client_timestamp: new Date().toISOString(), position_ms: Math.round(audio.currentTime * 1000) || 0, duration_ms: Math.round(audio.duration * 1000) || 0, listened_ms_delta: listenedMsDelta, offline: !navigator.onLine, metadata});
+            localStorage.setItem(eventKey, JSON.stringify(pendingEvents));
+            flushEvents();
+          };
+          const display = () => {
+            const item = current();
+            if (!item) return;
+            if (!item.playbackId) { item.playbackId = uuid(); save(); }
+            document.querySelector("#player-title").textContent = item.title;
+            document.querySelector("#player-artist").textContent = item.artist;
+            if (audio.src !== new URL(item.stream, location.href).href) audio.src = item.stream;
+            if ("mediaSession" in navigator) navigator.mediaSession.metadata = new MediaMetadata({title: item.title, artist: item.artist, album: "uMusic"});
+          };
+          const playAt = (index) => {
+            if (!state.queue.length) return;
+            if (current() && !audio.ended && audio.currentTime > 0) emit("skipped");
+            switchingTrack = true;
+            state.index = (index + state.queue.length) % state.queue.length;
+            state.position = 0;
+            const item = current();
+            const replayed = Boolean(item.playbackId);
+            item.playbackId = uuid();
+            display(); save(); audio.play().then(() => emit(replayed ? "replayed" : "started")).catch(() => {});
+            switchingTrack = false;
+          };
+          document.addEventListener("click", (event) => {
+            const button = event.target.closest(".play-track");
+            if (!button) return;
+            const item = {id: button.dataset.trackId, title: button.dataset.title, artist: button.dataset.artist, stream: button.dataset.stream};
+            const found = state.queue.findIndex(track => track.id === item.id);
+            if (found < 0) { state.queue.push(item); playAt(state.queue.length - 1); } else playAt(found);
+          });
+          document.querySelector("#player-previous").addEventListener("click", () => playAt(state.index - 1));
+          document.querySelector("#player-next").addEventListener("click", () => playAt(state.index + 1));
+          document.querySelector("#player-like").addEventListener("click", () => emit("liked"));
+          document.querySelector("#player-dislike").addEventListener("click", () => emit("disliked"));
+          document.querySelector("#player-remove").addEventListener("click", () => {
+            if (!current()) return;
+            emit("queue_removed");
+            state.queue.splice(state.index, 1);
+            state.index = Math.min(state.index, Math.max(0, state.queue.length - 1));
+            state.position = 0; save();
+            if (current()) { display(); audio.play().catch(() => {}); } else { audio.removeAttribute("src"); audio.load(); }
+          });
+          audio.addEventListener("ended", () => { emit("completed"); playAt(state.index + 1); });
+          audio.addEventListener("pause", () => { if (!audio.ended && !switchingTrack) emit("paused"); });
+          audio.addEventListener("play", () => { if (audio.currentTime > 0 && !switchingTrack) emit("resumed"); });
+          audio.addEventListener("seeked", () => emit("seeked", 0, {seek_target_ms: Math.round(audio.currentTime * 1000)}));
+          audio.addEventListener("timeupdate", () => {
+            state.position = audio.currentTime; save();
+            const now = Date.now();
+            if (!audio.paused && now - lastHeartbeat >= 15000) { const delta = lastHeartbeat ? Math.min(30000, now - lastHeartbeat) : 0; lastHeartbeat = now; emit("progress", delta); }
+          });
+          audio.addEventListener("loadedmetadata", () => { if (state.position && state.position < audio.duration) audio.currentTime = state.position; });
+          if ("mediaSession" in navigator) {
+            navigator.mediaSession.setActionHandler("play", () => audio.play());
+            navigator.mediaSession.setActionHandler("pause", () => audio.pause());
+            navigator.mediaSession.setActionHandler("previoustrack", () => playAt(state.index - 1));
+            navigator.mediaSession.setActionHandler("nexttrack", () => playAt(state.index + 1));
+            navigator.mediaSession.setActionHandler("seekto", event => { if (event.seekTime != null) audio.currentTime = event.seekTime; });
+          }
+          display();
+          window.addEventListener("online", flushEvents);
+          flushEvents();
+        })();
+      </script>
+    {% endif %}
+  </body>
+</html>

@@ -1,0 +1,12 @@
+{
+  "": {
+    "swift-dependencies": "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCoreTests.build/primary.swiftdeps"
+  },
+  "/Users/muzammilpeer/Git/uMusic/clients/UMusic/Tests/UMusicCoreTests/UMusicCoreTests.swift": {
+    "dependencies": "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCoreTests.build/UMusicCoreTests.d",
+    "object": "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCoreTests.build/UMusicCoreTests.swift.o",
+    "swiftmodule": "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCoreTests.build/UMusicCoreTests~partial.swiftmodule",
+    "swift-dependencies": "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCoreTests.build/UMusicCoreTests.swiftdeps",
+    "diagnostics": "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCoreTests.build/UMusicCoreTests.dia"
+  }
+}

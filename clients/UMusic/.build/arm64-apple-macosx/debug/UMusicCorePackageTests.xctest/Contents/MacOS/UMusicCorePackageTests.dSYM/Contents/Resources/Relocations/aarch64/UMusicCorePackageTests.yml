@@ -1,0 +1,5 @@
+---
+triple:          'arm64-apple-darwin'
+binary-path:     '/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCorePackageTests.xctest/Contents/MacOS/UMusicCorePackageTests'
+relocations:     []
+...

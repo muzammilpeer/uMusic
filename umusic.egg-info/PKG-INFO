@@ -1,0 +1,97 @@
+Metadata-Version: 2.4
+Name: umusic
+Version: 0.1.0
+Summary: Private, self-hosted, context-aware MP3 player
+Requires-Python: <3.14,>=3.13
+Description-Content-Type: text/markdown
+Requires-Dist: celery[redis]==5.5.3
+Requires-Dist: Django==5.2.7
+Requires-Dist: django-environ==0.12.0
+Requires-Dist: djangorestframework==3.16.1
+Requires-Dist: gunicorn==23.0.0
+Requires-Dist: psycopg[binary]==3.2.10
+Requires-Dist: redis==5.2.1
+Provides-Extra: dev
+Requires-Dist: coverage[toml]==7.10.7; extra == "dev"
+Requires-Dist: django-stubs[compatible-mypy]==5.2.5; extra == "dev"
+Requires-Dist: mypy==1.18.2; extra == "dev"
+Requires-Dist: pre-commit==4.3.0; extra == "dev"
+Requires-Dist: pytest==8.4.2; extra == "dev"
+Requires-Dist: pytest-django==4.11.1; extra == "dev"
+Requires-Dist: ruff==0.13.2; extra == "dev"
+
+# uMusic
+
+uMusic is a private, self-hosted, context-aware music system. It stores an MP3
+library, plays music in a web browser, learns from listening behavior, generates
+playlists for activities and places, and later synchronizes those playlists to
+an offline-first iPhone application.
+
+## Product goals
+
+- Store and manage MP3 files on a private server.
+- Play the library from a responsive web application.
+- Learn from plays, skips, completions, likes, dislikes, and replays.
+- Generate mixes for cycling, running, gym, focus, relaxation, and other contexts.
+- Associate preferences with user-created places/geofences without exposing raw
+  location history unnecessarily.
+- Import MP3 files directly and support private, replaceable import adapters.
+- Synchronize prepared playlists to an iPhone for background/offline playback.
+- Store media on either a local Docker volume or a Docker-mounted shared
+  filesystem such as GFS/GlusterFS.
+- Extend an exhausted offline queue from the server and cache upcoming tracks
+  while connectivity is available.
+- Leave room for spoken-word and podcast support after the music experience works.
+
+## Documentation
+
+1. [Product specification](docs/01-product-specification.md)
+2. [Architecture](docs/02-architecture.md)
+3. [Data and learning model](docs/03-data-and-learning.md)
+4. [Sprint plan](docs/04-sprint-plan.md)
+5. [API contract](docs/05-api-contract.md)
+6. [Deployment and operations](docs/06-deployment.md)
+7. [Development prompts](docs/07-development-prompts.md)
+8. [Definition of done](docs/08-definition-of-done.md)
+9. [Per-sprint workspace](docs/sprints/README.md)
+
+## Planned stack
+
+- Python 3.13 and Django 5.x
+- Django REST Framework
+- PostgreSQL
+- Redis and Celery
+- Django templates plus HTMX for the first web application
+- HTML5 audio with Media Session integration
+- FFmpeg/ffprobe for validation and metadata inspection
+- Docker Compose for self-hosting
+- Pluggable filesystem storage; local Docker volumes are the default
+- SwiftUI for the eventual iPhone client
+
+Exact dependency versions should be pinned when Sprint 0 begins.
+
+## Development quick start
+
+Docker is the canonical Python 3.13 environment:
+
+```bash
+cp .env.example .env
+docker compose up --build
+```
+
+Then open `http://localhost:8000/health/ready/`. See
+[CONTRIBUTING.md](CONTRIBUTING.md) for local tooling and verification commands.
+
+## Delivery order
+
+The backend is the product foundation. The web player and learning pipeline are
+built and exercised before iOS work begins so that the recommendation model has
+real data and the mobile app can rely on a stable API.
+
+## Content boundary
+
+uMusic accepts MP3 files that the operator owns or is authorized to download and
+store. Import mechanisms are isolated behind adapters and disabled by default.
+The operator is responsible for complying with source-site terms and applicable
+copyright law. The project will not implement DRM circumvention, credential
+theft, or access-control bypasses.

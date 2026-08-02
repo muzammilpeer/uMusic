@@ -1,0 +1,68 @@
+{
+  "": {
+    "swift-dependencies": "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCore.build/primary.swiftdeps"
+  },
+  "/Users/muzammilpeer/Git/uMusic/clients/UMusic/UMusic/APIClient.swift": {
+    "dependencies": "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCore.build/APIClient.d",
+    "object": "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCore.build/APIClient.swift.o",
+    "swiftmodule": "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCore.build/APIClient~partial.swiftmodule",
+    "swift-dependencies": "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCore.build/APIClient.swiftdeps",
+    "diagnostics": "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCore.build/APIClient.dia"
+  },
+  "/Users/muzammilpeer/Git/uMusic/clients/UMusic/UMusic/EventSyncService.swift": {
+    "dependencies": "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCore.build/EventSyncService.d",
+    "object": "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCore.build/EventSyncService.swift.o",
+    "swiftmodule": "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCore.build/EventSyncService~partial.swiftmodule",
+    "swift-dependencies": "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCore.build/EventSyncService.swiftdeps",
+    "diagnostics": "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCore.build/EventSyncService.dia"
+  },
+  "/Users/muzammilpeer/Git/uMusic/clients/UMusic/UMusic/Models.swift": {
+    "dependencies": "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCore.build/Models.d",
+    "object": "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCore.build/Models.swift.o",
+    "swiftmodule": "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCore.build/Models~partial.swiftmodule",
+    "swift-dependencies": "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCore.build/Models.swiftdeps",
+    "diagnostics": "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCore.build/Models.dia"
+  },
+  "/Users/muzammilpeer/Git/uMusic/clients/UMusic/UMusic/OfflineAPI.swift": {
+    "dependencies": "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCore.build/OfflineAPI.d",
+    "object": "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCore.build/OfflineAPI.swift.o",
+    "swiftmodule": "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCore.build/OfflineAPI~partial.swiftmodule",
+    "swift-dependencies": "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCore.build/OfflineAPI.swiftdeps",
+    "diagnostics": "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCore.build/OfflineAPI.dia"
+  },
+  "/Users/muzammilpeer/Git/uMusic/clients/UMusic/UMusic/OfflineManager.swift": {
+    "dependencies": "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCore.build/OfflineManager.d",
+    "object": "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCore.build/OfflineManager.swift.o",
+    "swiftmodule": "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCore.build/OfflineManager~partial.swiftmodule",
+    "swift-dependencies": "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCore.build/OfflineManager.swiftdeps",
+    "diagnostics": "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCore.build/OfflineManager.dia"
+  },
+  "/Users/muzammilpeer/Git/uMusic/clients/UMusic/UMusic/OfflineModels.swift": {
+    "dependencies": "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCore.build/OfflineModels.d",
+    "object": "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCore.build/OfflineModels.swift.o",
+    "swiftmodule": "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCore.build/OfflineModels~partial.swiftmodule",
+    "swift-dependencies": "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCore.build/OfflineModels.swiftdeps",
+    "diagnostics": "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCore.build/OfflineModels.dia"
+  },
+  "/Users/muzammilpeer/Git/uMusic/clients/UMusic/UMusic/QueueStore.swift": {
+    "dependencies": "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCore.build/QueueStore.d",
+    "object": "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCore.build/QueueStore.swift.o",
+    "swiftmodule": "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCore.build/QueueStore~partial.swiftmodule",
+    "swift-dependencies": "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCore.build/QueueStore.swiftdeps",
+    "diagnostics": "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCore.build/QueueStore.dia"
+  },
+  "/Users/muzammilpeer/Git/uMusic/clients/UMusic/UMusic/WorkoutAPI.swift": {
+    "dependencies": "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCore.build/WorkoutAPI.d",
+    "object": "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCore.build/WorkoutAPI.swift.o",
+    "swiftmodule": "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCore.build/WorkoutAPI~partial.swiftmodule",
+    "swift-dependencies": "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCore.build/WorkoutAPI.swiftdeps",
+    "diagnostics": "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCore.build/WorkoutAPI.dia"
+  },
+  "/Users/muzammilpeer/Git/uMusic/clients/UMusic/UMusic/WorkoutModels.swift": {
+    "dependencies": "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCore.build/WorkoutModels.d",
+    "object": "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCore.build/WorkoutModels.swift.o",
+    "swiftmodule": "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCore.build/WorkoutModels~partial.swiftmodule",
+    "swift-dependencies": "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCore.build/WorkoutModels.swiftdeps",
+    "diagnostics": "/Users/muzammilpeer/Git/uMusic/clients/UMusic/.build/arm64-apple-macosx/debug/UMusicCore.build/WorkoutModels.dia"
+  }
+}

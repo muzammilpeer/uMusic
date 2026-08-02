@@ -1,0 +1,7 @@
+{% extends "base.html" %}{% block title %}Evaluation · uMusic{% endblock %}{% block content %}
+<h1>Recommendation evaluation</h1>
+{% if not has_evidence %}<section class="card"><strong>Deterministic fallback active.</strong><p>There is not yet enough listening evidence to compare models. uMusic continues using versioned rules, explicit exclusions, recorded seeds, and explanation codes.</p></section>{% endif %}
+<section class="card"><p>Compare completion, early skips, approval, diversity, coverage, explanations, and exploration acceptance by activity and immutable model version.</p>
+<table><thead><tr><th>Created</th><th>Activity</th><th>Model</th><th>Plays</th><th>Completion</th><th>Early skip</th><th>Approval</th><th>Artists</th><th>Coverage</th><th>Explained</th><th>Exploration accepted</th></tr></thead><tbody>
+{% for row in rows %}<tr><td>{{ row.created_at }}</td><td>{{ row.activity }}</td><td>{{ row.model_version }}</td><td>{{ row.plays }}</td><td>{{ row.completion_rate }}</td><td>{{ row.early_skip_rate }}</td><td>{{ row.approval_rate }}</td><td>{{ row.artist_diversity }}</td><td>{{ row.catalog_coverage }}</td><td>{{ row.explained_rate }}</td><td>{{ row.exploration_acceptance_rate }}</td></tr>{% empty %}<tr><td colspan="11">No generated recommendation versions yet.</td></tr>{% endfor %}
+</tbody></table></section>{% endblock %}

@@ -1,0 +1,232 @@
+openapi: 3.1.0
+info:
+  title: uMusic Mobile API
+  version: 1.0.0
+  description: Frozen Sprint 09 contract for the uMusic iOS client.
+servers:
+  - url: https://music.example.internal/api/v1
+security:
+  - deviceToken: []
+paths:
+  /auth/login:
+    post:
+      security: []
+      operationId: loginDevice
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/LoginRequest'}
+      responses:
+        '201':
+          description: Device token issued once.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/LoginResponse'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+  /me:
+    get:
+      operationId: getCurrentUser
+      responses:
+        '200':
+          description: Current owner.
+  /devices:
+    get:
+      operationId: listDevices
+      responses:
+        '200': {description: Registered devices.}
+    post:
+      operationId: registerDevice
+      responses:
+        '201': {description: Device and one-time token.}
+  /devices/{deviceId}:
+    delete:
+      operationId: revokeDevice
+      parameters:
+        - {$ref: '#/components/parameters/DeviceId'}
+      responses:
+        '204': {description: Revoked.}
+  /devices/{deviceId}/rotate-token:
+    post:
+      operationId: rotateDeviceToken
+      parameters:
+        - {$ref: '#/components/parameters/DeviceId'}
+      responses:
+        '201': {description: Replacement device token issued.}
+  /devices/{deviceId}/sync-plans:
+    post:
+      operationId: createSyncPlan
+      parameters:
+        - {$ref: '#/components/parameters/DeviceId'}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [playlist_id]
+              properties:
+                playlist_id: {type: string, format: uuid}
+      responses:
+        '201':
+          description: Immutable sync plan created.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/SyncPlan'}
+  /sync-plans/{planId}:
+    get:
+      operationId: getSyncPlan
+      parameters:
+        - {$ref: '#/components/parameters/PlanId'}
+      responses:
+        '200':
+          description: Sync plan state.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/SyncPlan'}
+  /sync-plans/{planId}/manifest:
+    get:
+      operationId: getSyncManifest
+      parameters:
+        - {$ref: '#/components/parameters/PlanId'}
+      responses:
+        '200':
+          description: Ordered offline manifest.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Manifest'}
+  /sync-plans/{planId}/acknowledge:
+    post:
+      operationId: acknowledgeSyncPlan
+      parameters:
+        - {$ref: '#/components/parameters/PlanId'}
+      requestBody:
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/SyncAcknowledgement'}
+      responses:
+        '200': {description: Acknowledgement recorded idempotently.}
+  /events/batch/:
+    post:
+      operationId: reconcileListeningEvents
+      description: Accepts at most 500 events; client_event_id is idempotent per owner.
+      responses:
+        '202':
+          description: Batch reconciled.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [accepted, duplicates, event_ids]
+                properties:
+                  accepted: {type: integer}
+                  duplicates: {type: integer}
+                  event_ids: {type: array, items: {type: string, format: uuid}}
+  /adapters/remote/:
+    post:
+      operationId: queueRemoteImport
+      description: Queue authorized public HTTPS MP3 and YouTube URLs.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [urls]
+              properties:
+                urls: {type: string, description: Comma or newline-separated URLs.}
+                attested: {type: boolean, default: false}
+      responses:
+        '202': {description: Batch accepted for asynchronous processing.}
+  /adapters/jobs/{jobId}/:
+    get:
+      operationId: getAdapterJob
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      responses:
+        '200': {description: Batch and ordered per-source status.}
+components:
+  securitySchemes:
+    deviceToken:
+      type: http
+      scheme: bearer
+  parameters:
+    DeviceId:
+      name: deviceId
+      in: path
+      required: true
+      schema: {type: string, format: uuid}
+    PlanId:
+      name: planId
+      in: path
+      required: true
+      schema: {type: string, format: uuid}
+  responses:
+    Unauthorized:
+      description: Invalid credentials or revoked token.
+  schemas:
+    LoginRequest:
+      type: object
+      required: [username, password, device_name]
+      properties:
+        username: {type: string}
+        password: {type: string, format: password}
+        device_name: {type: string}
+        platform: {type: string, default: ios}
+    LoginResponse:
+      type: object
+      required: [token, device]
+      properties:
+        token: {type: string, description: Store only in iOS Keychain.}
+        device: {$ref: '#/components/schemas/Device'}
+    Device:
+      type: object
+      required: [id, name, platform, scopes, revoked, created_at]
+      properties:
+        id: {type: string, format: uuid}
+        name: {type: string}
+        platform: {type: string}
+        scopes: {type: array, items: {type: string}}
+        revoked: {type: boolean}
+        created_at: {type: string, format: date-time}
+    SyncPlan:
+      type: object
+      required: [id, device_id, playlist_id, manifest_version, created_at]
+      properties:
+        id: {type: string, format: uuid}
+        device_id: {type: string, format: uuid}
+        playlist_id: {type: string, format: uuid}
+        manifest_version: {type: integer}
+        acknowledged_at: {type: [string, 'null'], format: date-time}
+        created_at: {type: string, format: date-time}
+    Manifest:
+      type: object
+      required: [id, version, playlist_id, entries]
+      properties:
+        id: {type: string, format: uuid}
+        version: {type: integer}
+        playlist_id: {type: string, format: uuid}
+        entries:
+          type: array
+          items: {$ref: '#/components/schemas/ManifestEntry'}
+    ManifestEntry:
+      type: object
+      required: [track_id, position, title, size_bytes, sha256, metadata_version, download_url, download_expires_at]
+      properties:
+        track_id: {type: string, format: uuid}
+        position: {type: integer}
+        title: {type: string}
+        size_bytes: {type: integer}
+        sha256: {type: string, pattern: '^[a-f0-9]{64}$'}
+        metadata_version: {type: integer}
+        artwork_checksum: {type: [string, 'null']}
+        download_url: {type: string, format: uri}
+        download_expires_at: {type: string, format: date-time}
+    SyncAcknowledgement:
+      type: object
+      properties:
+        downloaded_track_ids: {type: array, items: {type: string, format: uuid}}
+        failed_track_ids: {type: array, items: {type: string, format: uuid}}

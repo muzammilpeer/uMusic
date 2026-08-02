@@ -1,0 +1,1 @@
+"""uMusic application package."""

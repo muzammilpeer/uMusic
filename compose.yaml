@@ -1,0 +1,99 @@
+x-app: &app
+  build:
+    context: .
+  env_file:
+    - path: .env
+      required: false
+  environment:
+    DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-local-development-only-secret-change-me}
+    DJANGO_DEBUG: ${DJANGO_DEBUG:-true}
+    DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1,192.168.1.64,192.168.1.67,umusic.muzammilpeer.uk}
+    DJANGO_CSRF_TRUSTED_ORIGINS: ${DJANGO_CSRF_TRUSTED_ORIGINS:-http://localhost:8000,http://192.168.1.64:8000,http://192.168.1.67:8000,https://umusic.muzammilpeer.uk}
+    DATABASE_URL: ${DATABASE_URL:-postgresql://umusic:umusic@postgres:5432/umusic}
+    REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
+    CELERY_BROKER_URL: ${CELERY_BROKER_URL:-redis://redis:6379/1}
+    CELERY_RESULT_BACKEND: ${CELERY_RESULT_BACKEND:-redis://redis:6379/2}
+    UMUSIC_MEDIA_ROOT: /data/media
+    UMUSIC_QUARANTINE_ROOT: /data/quarantine
+    UMUSIC_STORAGE_BACKEND: ${UMUSIC_STORAGE_BACKEND:-local}
+    UMUSIC_MAX_UPLOAD_BYTES: ${UMUSIC_MAX_UPLOAD_BYTES:-157286400}
+    UMUSIC_SIGNED_URL_TTL_SECONDS: ${UMUSIC_SIGNED_URL_TTL_SECONDS:-604800}
+    UMUSIC_MAX_UPLOAD_FILES: ${UMUSIC_MAX_UPLOAD_FILES:-100}
+    UMUSIC_FFPROBE_PATH: ${UMUSIC_FFPROBE_PATH:-ffprobe}
+    UMUSIC_USE_INTERNAL_REDIRECT: ${UMUSIC_USE_INTERNAL_REDIRECT:-false}
+    UMUSIC_INTERNAL_MEDIA_PREFIX: ${UMUSIC_INTERNAL_MEDIA_PREFIX:-/protected-media/}
+    UMUSIC_FOLDER_IMPORT_ENABLED: ${UMUSIC_FOLDER_IMPORT_ENABLED:-true}
+    UMUSIC_TASTE_IMPORT_ENABLED: ${UMUSIC_TASTE_IMPORT_ENABLED:-true}
+    UMUSIC_YOUTUBE_IMPORT_ENABLED: ${UMUSIC_YOUTUBE_IMPORT_ENABLED:-true}
+    UMUSIC_IMPORT_ROOTS: ${UMUSIC_IMPORT_ROOTS:-/imports}
+    UMUSIC_YTDLP_PATH: ${UMUSIC_YTDLP_PATH:-yt-dlp}
+    UMUSIC_YOUTUBE_MAX_ITEMS: ${UMUSIC_YOUTUBE_MAX_ITEMS:-25}
+    UMUSIC_REMOTE_IMPORT_ENABLED: ${UMUSIC_REMOTE_IMPORT_ENABLED:-true}
+    UMUSIC_REMOTE_IMPORT_MAX_ITEMS: ${UMUSIC_REMOTE_IMPORT_MAX_ITEMS:-50}
+  volumes:
+    - media:/data/media
+    - quarantine:/data/quarantine
+    - backups:/backups
+  depends_on:
+    postgres:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+  restart: unless-stopped
+
+services:
+  web:
+    <<: *app
+    command: >-
+      sh -c "python manage.py migrate --noinput &&
+      gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 2"
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8000/health/ready/"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+  worker:
+    <<: *app
+    command: celery -A config worker --loglevel=INFO
+
+  scheduler:
+    <<: *app
+    command: celery -A config beat --loglevel=INFO
+
+  postgres:
+    image: postgres:17.6-bookworm
+    environment:
+      POSTGRES_DB: umusic
+      POSTGRES_USER: umusic
+      POSTGRES_PASSWORD: umusic
+    volumes:
+      - postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U umusic -d umusic"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  redis:
+    image: redis:8.2.1-alpine
+    command: redis-server --save 60 1 --loglevel warning
+    volumes:
+      - redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+volumes:
+  backups:
+  media:
+  postgres:
+  quarantine:
+  redis:

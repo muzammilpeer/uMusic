@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}Library · uMusic{% endblock %}
+{% block content %}
+  <h1>Music library</h1>
+  <form class="search" method="get">
+    <input type="search" name="q" value="{{ query }}" placeholder="Search title, artist, or album">
+    <button type="submit">Search</button>
+  </form>
+  <section class="card">
+    <h2>Upload MP3</h2>
+    <p class="muted">Only genuine MP3 audio is accepted. The file is validated before entering the library.</p>
+    <form id="upload-form">
+      {% csrf_token %}
+      <input id="audio-file" name="files" type="file" accept="audio/mpeg,.mp3" multiple required>
+      <button type="submit">Upload and import selected files</button>
+    </form>
+    <p id="upload-result" role="status"></p>
+  </section>
+  <section class="card">
+    <h2>{{ page.paginator.count }} track{{ page.paginator.count|pluralize }}</h2>
+    {% if page.object_list %}
+      <table>
+        <thead><tr><th></th><th>Title</th><th>Artist</th><th>Album</th><th>Duration</th></tr></thead>
+        <tbody>
+          {% for track in page.object_list %}
+            <tr>
+              <td><button class="play-track" data-track-id="{{ track.id }}" data-title="{{ track.title }}" data-artist="{{ track.artist.name }}" data-stream="{% url 'api-track-stream' track.id %}">▶</button></td>
+              <td><a href="{% url 'library:track-detail' track.id %}">{{ track.title }}</a></td>
+              <td><a href="{% url 'library:artist-detail' track.artist.id %}">{{ track.artist.name }}</a></td>
+              <td>{% if track.album %}<a href="{% url 'library:album-detail' track.album.id %}">{{ track.album.title }}</a>{% else %}—{% endif %}</td>
+              <td>{% widthratio track.audio_file.duration_ms 60000 1 %} min</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p>No music yet. Upload your first MP3 above.</p>
+    {% endif %}
+  </section>
+  <script>
+    document.querySelector("#upload-form").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const result = document.querySelector("#upload-result");
+      const body = new FormData(event.currentTarget);
+      result.className = "muted";
+      result.textContent = "Uploading and validating…";
+      try {
+        const response = await fetch("{% url 'api-import-upload' %}", {
+          method: "POST",
+          headers: {"X-CSRFToken": body.get("csrfmiddlewaretoken")},
+          body,
+        });
+        const payload = await response.json();
+        if (!response.ok && response.status !== 207) throw new Error(payload.error_message || payload.error?.message || "Import failed.");
+        const summary = payload.summary || {total: 1, successful: 1, failed: 0};
+        result.className = summary.failed ? "error" : "success";
+        result.textContent = `${summary.successful} of ${summary.total} files imported; ${summary.failed} failed.`;
+        window.setTimeout(() => window.location.reload(), 600);
+      } catch (error) {
+        result.className = "error";
+        result.textContent = error.message;
+      }
+    });
+  </script>
+{% endblock %}
