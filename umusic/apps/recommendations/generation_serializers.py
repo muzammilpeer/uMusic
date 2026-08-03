@@ -7,6 +7,11 @@ class GenerationInputSerializer(serializers.Serializer):
     activity_id = serializers.UUIDField()
     geofence_id = serializers.UUIDField(required=False, allow_null=True)
     duration_minutes = serializers.IntegerField(min_value=5, max_value=1440, default=60)
+    offline_quota_bytes = serializers.IntegerField(
+        min_value=1024 * 1024,
+        max_value=100 * 1024 * 1024 * 1024,
+        required=False,
+    )
     target_energy = serializers.FloatField(min_value=0, max_value=1, default=0.7)
     discovery = serializers.FloatField(min_value=0, max_value=1, default=0.2)
     seed = serializers.IntegerField(min_value=0, max_value=2**63 - 1)

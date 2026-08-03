@@ -124,6 +124,7 @@ def generate_playlist(
     *,
     activity_kind: str,
     duration_minutes: int,
+    offline_quota_bytes: int | None = None,
     target_energy: float,
     discovery: float,
     seed: int,
@@ -144,14 +145,29 @@ def generate_playlist(
     )
     selected: list[tuple[Candidate, float, float, list[dict[str, Any]]]] = []
     total_ms = 0
+    total_bytes = 0
     remaining = list(candidates)
-    while remaining and (total_ms < target_ms - average_ms / 2 or not selected):
-        progress = min(1.0, total_ms / target_ms) if target_ms else 0.0
+    while remaining:
+        if offline_quota_bytes is None:
+            if selected and total_ms >= target_ms - average_ms / 2:
+                break
+            eligible = remaining
+            progress = min(1.0, total_ms / target_ms) if target_ms else 0.0
+        else:
+            capacity = offline_quota_bytes - total_bytes
+            eligible = [
+                candidate
+                for candidate in remaining
+                if candidate.track.audio_file.size_bytes <= capacity
+            ]
+            if not eligible:
+                break
+            progress = min(1.0, total_bytes / offline_quota_bytes)
         energy_target = _energy_target(activity_kind, target_energy, progress, len(selected))
         last_artists = {item[0].track.artist_id for item in selected[-3:]}
         last_albums = {item[0].track.album_id for item in selected[-2:] if item[0].track.album_id}
         ranked = []
-        for candidate in remaining:
+        for candidate in eligible:
             energy = float(candidate.track.energy) if candidate.track.energy is not None else 0.5
             energy_score = (1.0 - abs(energy - energy_target)) * 0.18
             duration_fit = (
@@ -189,10 +205,12 @@ def generate_playlist(
             reasons.append(_reason("SPACING_PENALTY", "Artist or album appeared recently", spacing))
         selected.append((chosen, score, energy_target, reasons))
         total_ms += chosen.track.audio_file.duration_ms
+        total_bytes += chosen.track.audio_file.size_bytes
         remaining.remove(chosen)
     inputs = {
         "activity_kind": activity_kind,
         "duration_minutes": duration_minutes,
+        "offline_quota_bytes": offline_quota_bytes,
         "target_energy": round(target_energy, 4),
         "discovery": round(discovery, 4),
         "seed": seed,

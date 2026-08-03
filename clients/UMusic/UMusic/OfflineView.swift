@@ -4,7 +4,6 @@ import SwiftUI
 final class OfflineViewModel: ObservableObject {
     @Published var activities: [ActivityOption] = []
     @Published var selectedActivity: UUID?
-    @Published var duration = 60
     @Published var preparing = false
     @Published var status = "No prepared session"
     @Published var tracks: [Track] = []
@@ -53,7 +52,7 @@ final class OfflineViewModel: ObservableObject {
         do {
             let generated = try await api.generateSession(
                 server: server, token: token, activityID: selectedActivity,
-                duration: duration, energy: 0.75
+                quotaBytes: preferences.quotaBytes, energy: 0.75
             )
             let plan = try await api.createSyncPlan(
                 server: server, token: token, deviceID: deviceID, playlistID: generated.id
@@ -156,7 +155,9 @@ struct OfflineView: View {
                     }
                 }
                 .disabled(model.activities.isEmpty)
-                Stepper("Duration: \(model.duration) minutes", value: $model.duration, in: 15...240, step: 15)
+                Text("Downloads the best activity-matched songs that fit within your offline music limit.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
                 #if os(macOS)
                 Toggle("Wi-Fi or Ethernet only", isOn: $model.preferences.wifiOnly)
                 #else

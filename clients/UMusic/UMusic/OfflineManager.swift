@@ -57,17 +57,14 @@ actor OfflineManager {
             return cached.sha256 != entry.sha256
                 || !FileManager.default.fileExists(atPath: fileURL(cached).path)
         }
-        let required = missing.reduce(Int64(0)) { $0 + $1.sizeBytes }
-        let replacing = missing.reduce(Int64(0)) { total, entry in
-            total + (index[entry.trackID]?.sizeBytes ?? 0)
-        }
-        let projected = cachedBytes() - replacing + required
-        guard projected <= preferences.quotaBytes else {
-            return ([], missing.map(\.trackID))
-        }
         var downloaded: [UUID] = []
         var failed: [UUID] = []
         for entry in missing {
+            let existingBytes = index[entry.trackID]?.sizeBytes ?? 0
+            guard cachedBytes() - existingBytes + entry.sizeBytes <= preferences.quotaBytes else {
+                failed.append(entry.trackID)
+                continue
+            }
             do {
                 try await download(entry, pinned: true, kind: .prepared)
                 downloaded.append(entry.trackID)

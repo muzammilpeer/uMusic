@@ -77,6 +77,27 @@ def test_duration_and_explanations(catalog: tuple[User, list[Track]]) -> None:
 
 
 @pytest.mark.django_db
+def test_offline_quota_selects_complete_tracks_up_to_byte_limit(
+    catalog: tuple[User, list[Track]],
+) -> None:
+    owner, _ = catalog
+    playlist = generate_playlist(
+        owner,
+        activity_kind="cycling",
+        duration_minutes=1440,
+        offline_quota_bytes=350,
+        target_energy=0.8,
+        discovery=0.25,
+        seed=42,
+    )
+    assert playlist.items.count() == 3
+    assert sum(
+        item.track.audio_file.size_bytes
+        for item in playlist.items.select_related("track__audio_file")
+    ) <= 350
+
+
+@pytest.mark.django_db
 def test_explicit_dislike_is_hard_exclusion(catalog: tuple[User, list[Track]]) -> None:
     owner, tracks = catalog
     disliked = tracks[0]

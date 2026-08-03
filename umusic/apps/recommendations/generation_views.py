@@ -42,6 +42,7 @@ def generate_from_data(owner: User, data: dict[str, Any]) -> GeneratedPlaylist:
         owner,
         activity_kind=activity.kind,
         duration_minutes=int(data["duration_minutes"]),
+        offline_quota_bytes=data.get("offline_quota_bytes"),
         target_energy=float(data["target_energy"]),
         discovery=float(data["discovery"]),
         seed=int(data["seed"]),

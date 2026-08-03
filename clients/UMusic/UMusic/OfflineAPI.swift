@@ -3,7 +3,7 @@ import Foundation
 protocol OfflineMusicAPI: Sendable {
     func activities(server: URL, token: String) async throws -> [ActivityOption]
     func generateSession(
-        server: URL, token: String, activityID: UUID, duration: Int, energy: Double
+        server: URL, token: String, activityID: UUID, quotaBytes: Int64, energy: Double
     ) async throws -> GeneratedSession
     func createSyncPlan(
         server: URL, token: String, deviceID: UUID, playlistID: UUID
@@ -30,7 +30,7 @@ extension APIClient: OfflineMusicAPI {
     }
 
     func generateSession(
-        server: URL, token: String, activityID: UUID, duration: Int, energy: Double
+        server: URL, token: String, activityID: UUID, quotaBytes: Int64, energy: Double
     ) async throws -> GeneratedSession {
         var request = offlineRequest(
             server.appending(path: "api/v1/recommendations/session-playlist/"), token: token
@@ -38,7 +38,8 @@ extension APIClient: OfflineMusicAPI {
         request.httpMethod = "POST"
         request.httpBody = try JSONSerialization.data(withJSONObject: [
             "activity_id": activityID.uuidString,
-            "duration_minutes": duration,
+            "duration_minutes": 1440,
+            "offline_quota_bytes": quotaBytes,
             "target_energy": energy,
             "discovery": 0.2,
             "offline": true,
