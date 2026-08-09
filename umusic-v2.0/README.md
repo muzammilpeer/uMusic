@@ -18,6 +18,11 @@ This folder is deliberately independent of the existing application. It is a spe
 - [API_CONTRACT.md](API_CONTRACT.md) — client/server request and response contracts
 - [ML_AND_PROMPTS.md](ML_AND_PROMPTS.md) — cold start, ranking, compact learning records, evaluation, and LLM prompts
 - [SPRINTS.md](SPRINTS.md) — phased implementation plan with gates and definitions of done
+- [Documentation/DECISION_REGISTER.md](Documentation/DECISION_REGISTER.md) — Sprint 0 product and engineering decisions
+- [Documentation/ENGINEERING_BUDGETS.md](Documentation/ENGINEERING_BUDGETS.md) — measurable performance and energy gates
+- [Documentation/THREAT_AND_PRIVACY_MODEL.md](Documentation/THREAT_AND_PRIVACY_MODEL.md) — assets, threats, controls, and privacy defaults
+- [Documentation/PROTOTYPE_PLAN.md](Documentation/PROTOTYPE_PLAN.md) — disposable feasibility spikes and thresholds
+- [Documentation/REQUIREMENTS_TRACEABILITY.md](Documentation/REQUIREMENTS_TRACEABILITY.md) — requirement-to-sprint evidence map
 
 ## Product principles
 
@@ -36,4 +41,3 @@ This folder is deliberately independent of the existing application. It is a spe
 - On-device model family and minimum supported hardware.
 - Whether macOS is a full player at launch or an inspection/export companion first.
 - Ramadan behavior: the default proposed here is an optional user preference with easy manual override, never an assumption based only on location or identity.
-

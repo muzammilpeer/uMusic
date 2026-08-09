@@ -157,4 +157,3 @@ Exports sanitized or full local learning data, opens the inspectable store on ma
 ## 8. Release gates
 
 No phase advances unless tests cover migration, offline playback, restoration, queue priority, background downloads, permission denial, retention deletion, export, and model fallback. Battery, memory, launch, and playback latency budgets must be measured on the minimum supported physical iPhone.
-

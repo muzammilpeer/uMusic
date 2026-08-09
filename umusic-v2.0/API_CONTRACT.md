@@ -123,4 +123,3 @@ No personal listening/context upload endpoint exists in the default v2 contract.
 - Generate decoding compatibility tests from golden responses.
 - Unknown enum values decode to `.unknown(rawValue)` and do not crash sync.
 - API evolution is additive within v2; breaking changes require a new version/capability.
-

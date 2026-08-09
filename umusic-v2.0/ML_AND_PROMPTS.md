@@ -114,13 +114,12 @@ User: Create a model card covering purpose, non-goals, data provenance/consent, 
 ### 5. Sprint implementation prompt template
 
 ```text
-Implement uMusic 2.0 Sprint <N> from umusicv2.0/SPRINTS.md.
-Read the uMusic skill and only the references it routes to. Treat v1 as read-only unless the sprint explicitly defines a migration adapter. Work inside umusicv2.0. Preserve user data and unrelated edits. Use clean architecture boundaries from ARCHITECTURE.md, API contracts from API_CONTRACT.md, and privacy constraints from DATA_AND_PRIVACY.md. Add tests for every acceptance criterion, run proportional validation, and report changed files, decisions, limitations, and measured results.
+Implement uMusic 2.0 Sprint <N> from umusic-v2.0/SPRINTS.md.
+Read the uMusic skill and only the references it routes to. Treat v1 as read-only unless the sprint explicitly defines a migration adapter. Work inside umusic-v2.0. Preserve user data and unrelated edits. Use clean architecture boundaries from ARCHITECTURE.md, API contracts from API_CONTRACT.md, and privacy constraints from DATA_AND_PRIVACY.md. Add tests for every acceptance criterion, run proportional validation, and report changed files, decisions, limitations, and measured results.
 ```
 
 ### 6. Telemetry review prompt
 
 ```text
-Review this proposed event/schema change against umusicv2.0/DATA_AND_PRIVACY.md. Identify whether each field is necessary for a named recommendation feature, its sensitivity, retention, aggregation path, export behavior, indexing/storage cost, and permission requirement. Reject fields without a concrete use. Return a migration-safe revised schema and tests; never add raw continuous sensor samples.
+Review this proposed event/schema change against umusic-v2.0/DATA_AND_PRIVACY.md. Identify whether each field is necessary for a named recommendation feature, its sensitivity, retention, aggregation path, export behavior, indexing/storage cost, and permission requirement. Reject fields without a concrete use. Return a migration-safe revised schema and tests; never add raw continuous sensor samples.
 ```
-

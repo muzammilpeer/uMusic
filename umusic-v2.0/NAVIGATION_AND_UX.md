@@ -97,4 +97,3 @@ This tab presents the full player; tapping/swiping the mini player reaches the s
 - Deep links cover track, album, artist, playlist, import job, settings subsection, and Now Playing.
 - Playback state is independent of view lifecycle.
 - Loading, empty, offline, permission-denied, recoverable-error, and fatal-configuration states are designed for every screen.
-

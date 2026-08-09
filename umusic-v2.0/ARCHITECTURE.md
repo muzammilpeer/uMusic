@@ -3,7 +3,7 @@
 ## Repository shape
 
 ```text
-umusicv2.0/
+umusic-v2.0/
 ├── Package.swift                         # development/test composition
 ├── Sources/
 │   ├── UMusicCore/                       # public facade and stable value types
@@ -130,4 +130,3 @@ Separate stores make catalog replacement, telemetry expiration, and user export 
 - Unit tests for policies/state machines; integration tests for Core Data and background URLSession; contract tests against API fixtures; UI tests for navigation and permission denial.
 - Deterministic recommendation fixtures assert queue constraints and explanations.
 - Instruments/XCTest metrics cover launch, scroll, memory, energy, database, download, inference, and audio underruns.
-

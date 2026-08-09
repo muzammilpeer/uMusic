@@ -142,4 +142,3 @@ umusic-export-YYYYMMDD.zip
 ## Permission copy principles
 
 Ask at the point of value, describe what is collected, how often, how it changes recommendations, and that denial leaves manual controls available. Permission revocation stops collection immediately; previously collected raw data follows the user’s retention/delete choice.
-
