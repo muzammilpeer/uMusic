@@ -7,8 +7,8 @@ Statuses: **Accepted** is the working v2 baseline; **Provisional** must be confi
 | D-001 | Minimum Apple OS | Provisional | iOS/iPadOS 17, macOS 14 | Product owner | Before Sprint 1 | Project settings, API availability |
 | D-002 | Framework consumers | Provisional | uMusic app and extensions only for v2.0; public SDK compatibility starts after launch | Product owner | Before Sprint 1 | Public API breadth |
 | D-003 | Persistence | Accepted | Core Data with three stores and explicit background contexts | Engineering | Done | Sprint 3 onward |
-| D-004 | Playback engine | Accepted | AVPlayer-based coordinator; prototype restoration before production | Engineering | Done | Sprint 4 |
-| D-005 | XCFramework linkage | Provisional | Static `UMusicCore.xcframework`; separate extension-safe product | Engineering | End Sprint 0 spike | Sprint 1 |
+| D-004 | Playback engine | Accepted | AVPlayer-based coordinator; deterministic P-001 passed, physical measurements pending | Engineering | Done | Sprint 4 |
+| D-005 | XCFramework linkage | Provisional | Static `UMusicCore.xcframework`; SwiftPM boundary passed, packaged-slice integration pending | Engineering | End Sprint 0 spike | Sprint 1 |
 | D-006 | Model runtime | Accepted | Core ML local inference with deterministic heuristic fallback | Product + ML | Done | Sprints 11/14 |
 | D-007 | Model delivery | Provisional | Bundled signed baseline; signed downloaded updates deferred until security review | Engineering | Before Sprint 14 | Sprint 14 |
 | D-008 | Minimum performance device | Open | Nominate oldest supported physical iPhone matching D-001 | Product owner | Before spike measurements | Release budgets |
@@ -25,4 +25,3 @@ The product owner should confirm D-001, D-002, D-008, and D-009. Work may use th
 ## Change control
 
 Changing an Accepted decision requires a superseding ADR describing new evidence, migration impact, privacy impact, and which tests/budgets must be repeated. A decision may not be changed only to make a failing validation disappear.
-

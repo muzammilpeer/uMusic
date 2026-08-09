@@ -13,6 +13,8 @@ Started: 2026-08-09
 - Five disposable feasibility spike specifications with pass/fail criteria.
 - Requirements-to-sprint traceability matrix.
 - Initial ADRs for platform, persistence, playback, framework packaging, local recommendation, and macOS scope.
+- P-001 restoration prototype with AVPlayer integration seam and three passing Swift tests.
+- P-002 resource/boundary prototype with two passing Swift tests and successful generic iOS/macOS compiles.
 
 ## Decisions and privacy impact
 
@@ -30,10 +32,15 @@ Started: 2026-08-09
 
 Physical-device spike measurements have not run and must not be represented as passed.
 
+### Prototype evidence
+
+- `P-001`: partial pass. One hundred controlled restores remained paused; immediate snapshot, deferred Play, recoverable missing media, Swift 6 concurrency, and generic iOS compilation passed. Physical audio/seek/latency tests remain.
+- `P-002`: partial pass. Resource loading, static product separation, safe URL validation, forbidden-import scan, and generic iOS/macOS compilation passed. A real packaged XCFramework and clean host/extension integration remain.
+
 ## Remaining before Sprint 0 completion
 
 1. Product owner confirms D-001, D-002, D-008, and D-009.
-2. Execute P-001 through P-005 on the nominated hardware.
+2. Finish physical/integration portions of P-001 and P-002, then execute P-003 through P-005 on the nominated hardware.
 3. Update provisional ADRs with measurements and final status.
 4. Record exact build/test commands and raw results.
 

@@ -1,6 +1,6 @@
 # ADR 0004: Framework and Extension Packaging
 
-- Status: Provisional pending P-002
+- Status: Provisional; SwiftPM boundary passed, packaged XCFramework pending
 - Date: 2026-08-09
 
 ## Decision
@@ -9,5 +9,4 @@ Build a static `UMusicCore.xcframework` for iOS device/simulator and macOS, plus
 
 ## Consequences
 
-Public APIs use Sendable values/protocols/streams and semantic versioning. Core Data, AVFoundation objects, SwiftUI views, Keychain implementation, and model tensors remain internal. Resource lookup and symbol boundaries must pass P-002 before acceptance.
-
+Public APIs use Sendable values/protocols/streams and semantic versioning. Core Data, AVFoundation objects, SwiftUI views, Keychain implementation, and model tensors remain internal. P-002 verified SwiftPM resource lookup, separate static products, generic iOS/macOS compilation, and a clean import source boundary. This ADR remains provisional until real device/simulator/macOS XCFramework slices integrate into clean host and extension targets.
