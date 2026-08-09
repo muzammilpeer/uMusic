@@ -4,7 +4,8 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from umusic.apps.library.models import Album, Artist, Track
+from umusic.apps.library.models import Album, Artist, LibraryMembership, Track
+from umusic.apps.library.services import accessible_tracks, playable_tracks
 from umusic.apps.sync.views import signed_download_url
 
 
@@ -36,7 +37,7 @@ class TrackPagination(PageNumberPagination):
 
 class TrackCollectionView(APIView):
     def get(self, request: Request) -> Response:
-        tracks = Track.objects.filter(is_active=True).select_related(
+        tracks = accessible_tracks(request.user).select_related(
             "artist", "album", "audio_file"
         )
         query = str(request.query_params.get("q", "")).strip()
@@ -56,20 +57,15 @@ class TrackCollectionView(APIView):
 class TrackDetailView(APIView):
     def get(self, request: Request, track_id: str) -> Response:
         track = (
-            Track.objects.filter(id=track_id, is_active=True)
+            playable_tracks(request.user).filter(id=track_id)
             .select_related("artist", "album", "audio_file")
             .first()
         )
         return Response(track_payload(track, request)) if track else Response(status=404)
 
     def delete(self, request: Request, track_id: str) -> Response:
-        if not request.user.is_superuser:
-            return Response(
-                {"detail": "Only a server administrator can delete library music."},
-                status=403,
-            )
         track = (
-            Track.objects.filter(id=track_id, is_active=True)
+            accessible_tracks(request.user).filter(id=track_id)
             .select_related("artist", "audio_file")
             .first()
         )
@@ -83,14 +79,22 @@ class TrackDetailView(APIView):
 
 class ArtistCollectionView(APIView):
     def get(self, request: Request) -> Response:
-        artists = Artist.objects.filter(tracks__is_active=True).distinct()[:500]
+        artists = Artist.objects.filter(
+            tracks__memberships__owner=request.user,
+            tracks__memberships__state=LibraryMembership.State.ACTIVE,
+            tracks__is_active=True,
+        ).distinct()[:500]
         return Response([{"id": str(item.id), "name": item.name} for item in artists])
 
 
 class AlbumCollectionView(APIView):
     def get(self, request: Request) -> Response:
         albums = (
-            Album.objects.filter(tracks__is_active=True)
+            Album.objects.filter(
+                tracks__memberships__owner=request.user,
+                tracks__memberships__state=LibraryMembership.State.ACTIVE,
+                tracks__is_active=True,
+            )
             .select_related("album_artist")
             .distinct()[:500]
         )

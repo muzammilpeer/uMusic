@@ -8,7 +8,7 @@ from django.urls import reverse
 
 from umusic.apps.accounts.models import User
 from umusic.apps.contexts.models import Activity
-from umusic.apps.library.models import Artist, AudioFile, Track
+from umusic.apps.library.models import Artist, AudioFile, LibraryMembership, Track
 from umusic.apps.recommendations.generator import generate_playlist, replace_track
 from umusic.apps.recommendations.models import Affinity, GeneratedPlaylist
 from umusic.apps.recommendations.services import active_configuration
@@ -40,6 +40,9 @@ def catalog(db: object) -> tuple[User, list[Track]]:
                 energy=None if index == 0 else f"{0.3 + (index % 6) * 0.1:.2f}",
             )
         )
+    LibraryMembership.objects.bulk_create(
+        [LibraryMembership(owner=owner, track=track) for track in tracks]
+    )
     return owner, tracks
 
 

@@ -7,7 +7,7 @@ from django.urls import reverse
 from umusic.apps.accounts.models import User
 from umusic.apps.contexts.models import Activity, ContextForgetRecord, ContextSnapshot, Geofence
 from umusic.apps.events.models import ListeningEvent
-from umusic.apps.library.models import Artist, AudioFile, AuditEvent, Track
+from umusic.apps.library.models import Artist, AudioFile, AuditEvent, LibraryMembership, Track
 
 
 @pytest.fixture
@@ -140,6 +140,7 @@ def test_session_and_event_carry_owned_snapshot(
         duration_ms=1000,
     )
     track = Track.objects.create(title="Ride", artist=artist, audio_file=audio)
+    LibraryMembership.objects.create(owner=owner, track=track)
     client.force_login(owner)
     session_response = client.post(
         reverse("api-playback-sessions"),

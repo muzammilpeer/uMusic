@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Import {{ job.id }} · uMusic{% endblock %}
+{% block content %}
+  <h1>Import details</h1>
+  <section class="card">
+    <dl>
+      <dt>File</dt><dd>{{ job.source_filename }}</dd>
+      <dt>Status</dt><dd>{{ job.get_status_display }}</dd>
+      <dt>Size</dt><dd>{{ job.size_bytes }} bytes</dd>
+      <dt>Checksum</dt><dd>{{ job.checksum|default:"—" }}</dd>
+      {% if job.track %}<dt>Track</dt><dd>{{ job.track }}</dd>{% endif %}
+      {% if job.error_code %}<dt>Error</dt><dd class="error">{{ job.error_code }} — {{ job.error_message }}</dd>{% endif %}
+    </dl>
+  </section>
+{% endblock %}

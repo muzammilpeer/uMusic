@@ -1,0 +1,3 @@
+{% extends "base.html" %}
+{% block title %}{{ artist.name }} · uMusic{% endblock %}
+{% block content %}<h1>{{ artist.name }}</h1><section class="card">{% for track in tracks %}<p><button class="play-track" data-track-id="{{ track.id }}" data-title="{{ track.title }}" data-artist="{{ track.artist.name }}" data-stream="{% url 'api-track-stream' track.id %}">▶</button> <a href="{% url 'library:track-detail' track.id %}">{{ track.title }}</a></p>{% empty %}<p>No tracks.</p>{% endfor %}</section>{% endblock %}

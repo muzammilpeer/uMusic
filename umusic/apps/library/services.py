@@ -12,7 +12,8 @@ from typing import Any, no_type_check
 
 from django.conf import settings
 from django.core.files.uploadedfile import UploadedFile
-from django.db import transaction
+from django.db import models, transaction
+from django.db.models import Q, QuerySet
 from django.utils import timezone
 from mutagen.id3 import (  # type: ignore[attr-defined]
     APIC,
@@ -34,6 +35,7 @@ from umusic.apps.library.models import (
     AudioFile,
     AuditEvent,
     ImportJob,
+    LibraryMembership,
     Track,
 )
 from umusic.apps.library.storage import (
@@ -52,6 +54,67 @@ class ImportFailure(RuntimeError):
         super().__init__(message)
         self.code = code
         self.message = message
+
+
+def accessible_tracks(owner: Any) -> QuerySet[Track]:
+    return Track.objects.filter(
+        is_active=True,
+        memberships__owner=owner,
+        memberships__state=LibraryMembership.State.ACTIVE,
+    ).distinct()
+
+
+def playable_tracks(owner: Any) -> QuerySet[Track]:
+    """Tracks in the private library or a currently authorized shared playlist."""
+    return Track.objects.filter(is_active=True).filter(
+        Q(
+            memberships__owner=owner,
+            memberships__state=LibraryMembership.State.ACTIVE,
+        )
+        | Q(playlisttrack__playlist__owner=owner)
+        | Q(
+            playlisttrack__playlist__access_grants__user=owner,
+            playlisttrack__playlist__access_grants__state="active",
+        )
+    ).distinct()
+
+
+def logical_library_bytes(owner: Any) -> int:
+    return int(
+        LibraryMembership.objects.filter(
+            owner=owner, state=LibraryMembership.State.ACTIVE
+        ).aggregate(total=models.Sum("track__audio_file__size_bytes"))["total"]
+        or 0
+    )
+
+
+def add_library_membership(
+    owner: Any, track: Track, source: str = LibraryMembership.Source.UPLOAD
+) -> LibraryMembership:
+    membership = LibraryMembership.objects.filter(owner=owner, track=track).first()
+    if membership and membership.state == LibraryMembership.State.ACTIVE:
+        return membership
+    current_bytes = logical_library_bytes(owner)
+    if current_bytes + track.audio_file.size_bytes > owner.storage_quota_bytes:
+        raise ImportFailure("QUOTA_EXCEEDED", "This import exceeds your library storage quota.")
+    membership, created = LibraryMembership.objects.get_or_create(
+        owner=owner,
+        track=track,
+        defaults={"state": LibraryMembership.State.ACTIVE, "source": source},
+    )
+    if not created:
+        membership.state = LibraryMembership.State.ACTIVE
+        membership.source = source
+        membership.removed_at = None
+        membership.save(update_fields=["state", "source", "removed_at", "updated_at"])
+    AuditEvent.objects.create(
+        actor=owner,
+        action="library.membership.added",
+        target_type="track",
+        target_id=str(track.id),
+        metadata={"source": source, "size_bytes": track.audio_file.size_bytes},
+    )
+    return membership
 
 
 @dataclass(frozen=True)
@@ -296,6 +359,7 @@ def process_import(job: ImportJob, storage: MediaStorage | None = None) -> Impor
         with storage.lock(checksum):
             existing = AudioFile.objects.select_related("track").filter(checksum=checksum).first()
             if existing:
+                add_library_membership(job.owner, existing.track)
                 job.status = ImportJob.Status.DUPLICATE
                 job.checksum = checksum
                 job.track = existing.track
@@ -313,6 +377,11 @@ def process_import(job: ImportJob, storage: MediaStorage | None = None) -> Impor
                 )
                 path.unlink(missing_ok=True)
                 return job
+
+            if logical_library_bytes(job.owner) + job.size_bytes > job.owner.storage_quota_bytes:
+                raise ImportFailure(
+                    "QUOTA_EXCEEDED", "This import exceeds your library storage quota."
+                )
 
             with transaction.atomic():
                 published = storage.publish(path, key, checksum)
@@ -355,6 +424,7 @@ def process_import(job: ImportJob, storage: MediaStorage | None = None) -> Impor
                     year=metadata.year,
                     genres=metadata.genres,
                 )
+                add_library_membership(job.owner, track)
                 job.status = ImportJob.Status.COMPLETED
                 job.checksum = checksum
                 job.track = track
@@ -419,28 +489,31 @@ def song_filename(artist: str, title: str) -> str:
 
 
 def remove_track_from_library(track: Track, actor: Any) -> bool:
-    """Hide a track, preserve history, and remove its MP3 from configured storage."""
-    audio = track.audio_file
-    storage = get_storage_for_backend(audio.storage_backend)
-    existed = storage.exists(audio.object_key)
+    """Remove only the actor's membership; shared catalog media remains intact."""
     with transaction.atomic():
-        track.is_active = False
-        track.save(update_fields=["is_active", "updated_at"])
+        membership = LibraryMembership.objects.select_for_update().filter(
+            owner=actor, track=track, state=LibraryMembership.State.ACTIVE
+        ).first()
+        if membership is None:
+            return False
+        membership.state = LibraryMembership.State.REMOVED
+        membership.removed_at = timezone.now()
+        membership.save(update_fields=["state", "removed_at", "updated_at"])
+        from umusic.apps.playlists.models import PlaylistTrack
+
+        PlaylistTrack.objects.filter(playlist__owner=actor, track=track).delete()
         AuditEvent.objects.create(
             actor=actor,
-            action="library.track.removed",
+            action="library.membership.removed",
             target_type="track",
             target_id=str(track.id),
             metadata={
                 "title": track.title,
                 "artist": track.artist.name,
-                "object_key": audio.object_key,
-                "size_bytes": audio.size_bytes,
+                "size_bytes": track.audio_file.size_bytes,
             },
         )
-    if existed:
-        storage.delete(audio.object_key)
-    return existed
+    return True
 
 
 @no_type_check

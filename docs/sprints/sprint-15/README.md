@@ -1,5 +1,8 @@
 # Sprint 15 — Playlist sharing and collaboration
 
+**Status:** Implementation complete; production migration/deployment and physical three-user
+acceptance remain pending.
+
 ## Goal
 
 Let users deliberately share playlists and server-available music while keeping all
@@ -65,6 +68,17 @@ personal history, fitness, location, contexts, and recommendation profiles priva
 - Revocation blocks new streaming/download immediately and has documented offline rules.
 - Physical MP3 deduplication and reference-safe deletion remain correct.
 - Django tests, security matrix, Ruff, mypy, readiness, iOS build, and macOS build pass.
+
+## Offline authorization policy
+
+- A shared song can be streamed while the user has active playlist access.
+- **Save to My Library** creates an independent private membership referencing the same
+  physical MP3. It can then participate in normal manual offline sync and remains after
+  the user leaves or is revoked.
+- Unsaved shared songs are not added to offline manifests, preventing an authorized
+  shared download from silently becoming a permanent local copy after revocation.
+- Signed media links are device-bound, expire after seven days, and re-check current
+  playlist/library authorization whenever fetched.
 
 ## Start
 

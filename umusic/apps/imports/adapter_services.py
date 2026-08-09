@@ -10,8 +10,13 @@ from django.utils import timezone
 from umusic.apps.accounts.models import User
 from umusic.apps.imports.adapters import enabled_adapters, resolve_import_path
 from umusic.apps.imports.models import AdapterJob, TasteCandidate
-from umusic.apps.library.models import AuditEvent, Track
-from umusic.apps.library.services import normalize_name, process_import, quarantine_upload
+from umusic.apps.library.models import AuditEvent
+from umusic.apps.library.services import (
+    accessible_tracks,
+    normalize_name,
+    process_import,
+    quarantine_upload,
+)
 
 
 def _require(adapter: str) -> None:
@@ -55,7 +60,7 @@ def import_taste(owner: User, entries: list[dict[str, Any]]) -> AdapterJob:
     job = AdapterJob.objects.create(
         owner=owner, adapter="taste", status="running", request={"entry_count": len(entries)}
     )
-    tracks = list(Track.objects.filter(is_active=True).select_related("artist"))
+    tracks = list(accessible_tracks(owner).select_related("artist"))
     for entry in entries:
         artist, title = str(entry.get("artist", "")).strip(), str(entry.get("title", "")).strip()
         exact = next(

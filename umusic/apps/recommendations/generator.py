@@ -11,6 +11,7 @@ from umusic.apps.accounts.models import User
 from umusic.apps.contexts.models import ContextSnapshot
 from umusic.apps.events.models import ListeningEvent
 from umusic.apps.library.models import Track
+from umusic.apps.library.services import accessible_tracks
 from umusic.apps.recommendations.models import (
     Affinity,
     GeneratedPlaylist,
@@ -68,7 +69,7 @@ def _candidates(
     )
     rng = random.Random(seed)
     result = []
-    tracks = Track.objects.filter(is_active=True).select_related("artist", "album", "audio_file")
+    tracks = accessible_tracks(owner).select_related("artist", "album", "audio_file")
     for track in sorted(tracks, key=lambda item: str(item.id)):
         global_track = affinities.get(("track", str(track.id), "global", ""))
         if global_track and global_track.explicit_preference < 0:

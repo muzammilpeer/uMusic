@@ -1,0 +1,6 @@
+{% extends "base.html" %}{% block title %}Privacy · uMusic{% endblock %}{% block content %}
+<h1>Data and privacy</h1>
+<section class="card"><h2>Export</h2><p>Download your profile, devices (never token hashes), places, contexts, listening history, learned affinities, and playlists.</p><a href="{% url 'library:privacy-export' %}">Download JSON export</a></section>
+<section class="card"><h2>Delete listening and learning</h2><p>This permanently deletes raw listening events, derived play facts, learning runs, and affinities. Your MP3 library and playlists remain.</p><form method="post">{% csrf_token %}<input type="hidden" name="action" value="delete_history"><label>Type DELETE HISTORY <input name="confirmation" autocomplete="off"></label> <button type="submit">Delete history</button></form></section>
+<section class="card"><h2>Delete account</h2><p>This revokes devices and permanently deletes all owner-scoped data. Shared MP3 catalog files remain.</p><form method="post">{% csrf_token %}<input type="hidden" name="action" value="delete_account"><label>Type DELETE ACCOUNT <input name="confirmation" autocomplete="off"></label> <button type="submit">Delete account</button></form></section>
+{% endblock %}

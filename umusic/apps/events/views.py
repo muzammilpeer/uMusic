@@ -10,7 +10,7 @@ from umusic.apps.events.serializers import (
     ListeningEventOutputSerializer,
 )
 from umusic.apps.events.services import event_defaults, rebuild_play_facts
-from umusic.apps.library.models import Track
+from umusic.apps.library.services import playable_tracks
 from umusic.apps.playback.models import PlaybackSession
 
 MAX_BATCH_SIZE = 500
@@ -29,7 +29,7 @@ class EventBatchView(APIView):
         serializer.is_valid(raise_exception=True)
         validated = serializer.validated_data
         track_ids = {item["track_id"] for item in validated}
-        if Track.objects.filter(id__in=track_ids, is_active=True).count() != len(track_ids):
+        if playable_tracks(request.user).filter(id__in=track_ids).count() != len(track_ids):
             return Response({"error": "One or more tracks were not found"}, status=400)
         session_ids = {item.get("playback_session_id") for item in validated} - {None}
         owned_sessions = PlaybackSession.objects.filter(

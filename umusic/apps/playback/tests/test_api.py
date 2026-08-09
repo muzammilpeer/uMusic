@@ -3,7 +3,7 @@ from django.test import Client
 from django.urls import reverse
 
 from umusic.apps.accounts.models import User
-from umusic.apps.library.models import Artist, AudioFile, Track
+from umusic.apps.library.models import Artist, AudioFile, LibraryMembership, Track
 
 
 @pytest.mark.django_db
@@ -30,6 +30,7 @@ def test_update_queue_and_resume_session(client: Client) -> None:
         duration_ms=1000,
     )
     track = Track.objects.create(title="Road", artist=artist, audio_file=audio)
+    LibraryMembership.objects.create(owner=user, track=track)
     client.force_login(user)
     created = client.post(
         reverse("api-playback-sessions"),

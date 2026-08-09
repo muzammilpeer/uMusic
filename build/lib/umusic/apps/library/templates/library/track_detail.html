@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}{{ track.title }} · uMusic{% endblock %}
+{% block content %}
+<section class="card"><h1>{{ track.title }}</h1><p><a href="{% url 'library:artist-detail' track.artist.id %}">{{ track.artist.name }}</a>{% if track.album %} · <a href="{% url 'library:album-detail' track.album.id %}">{{ track.album.title }}</a>{% endif %}</p><p>MP3 filename: <strong>{{ track.audio_file.original_filename }}</strong></p><button class="play-track" data-track-id="{{ track.id }}" data-title="{{ track.title }}" data-artist="{{ track.artist.name }}" data-stream="{% url 'api-track-stream' track.id %}">Play</button></section>
+<section class="card"><h2>Edit MP3 metadata</h2><p>This rewrites the ID3 tags inside the MP3, updates library tracking and checksum storage, and changes the display filename to <em>Singer - Song.mp3</em>.</p><form method="post">{% csrf_token %}{{ form.as_p }}<button type="submit">Update MP3 metadata</button></form></section>
+{% if request.user.is_staff %}
+<section class="card">
+  <h2>Remove music</h2>
+  <p class="error">This removes the song from your private library. Shared catalog media and listening history remain intact.</p>
+  <form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="delete">
+    <label>Type <strong>DELETE</strong> to confirm <input name="confirmation" autocomplete="off" required></label>
+    <button type="submit">Remove from my library</button>
+  </form>
+</section>
+{% endif %}
+{% endblock %}

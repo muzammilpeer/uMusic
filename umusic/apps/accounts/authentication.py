@@ -17,7 +17,7 @@ class DeviceTokenAuthentication(BaseAuthentication):
         try:
             prefix, secret = token.split(".", 1)
             device = Device.objects.select_related("owner").get(
-                token_prefix=prefix, revoked_at__isnull=True
+                token_prefix=prefix, revoked_at__isnull=True, owner__is_active=True
             )
         except (ValueError, Device.DoesNotExist) as error:
             raise AuthenticationFailed("Invalid or revoked device token") from error

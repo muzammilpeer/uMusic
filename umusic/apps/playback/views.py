@@ -9,7 +9,7 @@ from rest_framework.views import APIView
 from umusic.apps.accounts.models import Device, User
 from umusic.apps.contexts.models import ContextSnapshot
 from umusic.apps.library.api_views import track_payload
-from umusic.apps.library.models import Track
+from umusic.apps.library.services import playable_tracks
 from umusic.apps.playback.models import PlaybackSession, QueueItem
 from umusic.apps.recommendations.generator import regenerate_playlist
 from umusic.apps.recommendations.models import GeneratedPlaylist
@@ -54,7 +54,7 @@ class SessionCollectionView(APIView):
             return Response({"error": "track_ids must contain valid UUIDs"}, status=400)
         tracks = {
             str(track.id): track
-            for track in Track.objects.filter(id__in=normalized_ids, is_active=True)
+            for track in playable_tracks(request.user).filter(id__in=normalized_ids)
         }
         if len(tracks) != len(set(normalized_ids)):
             return Response({"error": "One or more tracks were not found"}, status=400)
@@ -91,8 +91,8 @@ class SessionDetailView(APIView):
             if field in request.data:
                 setattr(session, field, request.data[field])
         if "current_track_id" in request.data:
-            session.current_track = Track.objects.filter(
-                id=request.data["current_track_id"], is_active=True
+            session.current_track = playable_tracks(request.user).filter(
+                id=request.data["current_track_id"]
             ).first()
         session.revision += 1
         session.save()
@@ -112,7 +112,7 @@ class QueueView(APIView):
             return Response({"error": "track_ids must contain valid UUIDs"}, status=400)
         tracks = {
             str(track.id): track
-            for track in Track.objects.filter(id__in=normalized_ids, is_active=True)
+            for track in playable_tracks(request.user).filter(id__in=normalized_ids)
         }
         if len(tracks) != len(set(normalized_ids)):
             return Response({"error": "One or more tracks were not found"}, status=400)

@@ -1,8 +1,10 @@
 from datetime import timedelta
+from typing import cast
 from urllib.parse import quote
 
 from django.conf import settings
 from django.core import signing
+from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponse, StreamingHttpResponse
 from django.http.response import HttpResponseBase
 from django.shortcuts import get_object_or_404
@@ -14,6 +16,7 @@ from rest_framework.views import APIView
 
 from umusic.apps.accounts.models import Device
 from umusic.apps.library.models import Track
+from umusic.apps.library.services import accessible_tracks, playable_tracks
 from umusic.apps.library.storage import get_storage_for_backend
 from umusic.apps.playback.streaming import _chunks, _range
 from umusic.apps.recommendations.models import GeneratedPlaylist
@@ -31,8 +34,9 @@ def signed_download_url(request: Request, *, track_id: object, device_id: object
         salt="umusic-sync-download",
         compress=True,
     )
-    return request.build_absolute_uri(
-        reverse("sync-download", kwargs={"token": token})
+    return cast(
+        str,
+        request.build_absolute_uri(reverse("sync-download", kwargs={"token": token})),
     )
 
 
@@ -102,9 +106,14 @@ class ManifestView(APIView):
     def get(self, request: Request, plan_id: str) -> Response:
         plan = get_object_or_404(SyncPlan, id=plan_id, owner=request.user)
         entries = []
+        accessible_ids = set(
+            accessible_tracks(request.user).values_list("id", flat=True)
+        )
         for item in plan.playlist.items.select_related(
             "track__audio_file", "track__artwork", "track__artist", "track__album"
         ):
+            if item.track_id not in accessible_ids:
+                continue
             entries.append(
                 manifest_entry(
                     request, item.track, position=item.position, device_id=plan.device_id
@@ -137,15 +146,16 @@ def download(request, token: str) -> HttpResponseBase:  # type: ignore[no-untype
         payload = signing.loads(
             token, salt="umusic-sync-download", max_age=DOWNLOAD_MAX_AGE_SECONDS
         )
-        Device.objects.get(id=payload["device_id"], revoked_at__isnull=True)
-        track = Track.objects.select_related("audio_file").get(
-            id=payload["track_id"], is_active=True
+        device = Device.objects.select_related("owner").get(
+            id=payload["device_id"], revoked_at__isnull=True, owner__is_active=True
+        )
+        track = playable_tracks(device.owner).select_related("audio_file").get(
+            id=payload["track_id"]
         )
     except (
         signing.BadSignature,
         signing.SignatureExpired,
-        Device.DoesNotExist,
-        Track.DoesNotExist,
+        ObjectDoesNotExist,
     ):
         return HttpResponse(status=401)
     audio = track.audio_file

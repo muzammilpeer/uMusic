@@ -9,7 +9,7 @@ from django.test import Client
 from django.urls import reverse
 
 from umusic.apps.accounts.models import User
-from umusic.apps.library.models import Artist, AudioFile, Track
+from umusic.apps.library.models import Artist, AudioFile, LibraryMembership, Track
 from umusic.apps.library.storage import audio_object_key, get_media_storage
 
 
@@ -45,6 +45,7 @@ def test_stream_requires_authentication(client: Client, stream_track: tuple[Trac
 def test_full_and_range_stream(client: Client, stream_track: tuple[Track, bytes]) -> None:
     track, content = stream_track
     user = User.objects.create_user(username="owner", password="test-password")
+    LibraryMembership.objects.create(owner=user, track=track)
     client.force_login(user)
     full = client.get(reverse("api-track-stream", args=[track.id]))
     assert full.status_code == 200
@@ -61,6 +62,7 @@ def test_full_and_range_stream(client: Client, stream_track: tuple[Track, bytes]
 def test_invalid_range_returns_416(client: Client, stream_track: tuple[Track, bytes]) -> None:
     track, content = stream_track
     user = User.objects.create_user(username="owner", password="test-password")
+    LibraryMembership.objects.create(owner=user, track=track)
     client.force_login(user)
     response = client.get(reverse("api-track-stream", args=[track.id]), HTTP_RANGE="bytes=999-1000")
     assert response.status_code == 416

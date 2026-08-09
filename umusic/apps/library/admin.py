@@ -7,7 +7,10 @@ from umusic.apps.library.models import (
     AudioFile,
     AuditEvent,
     ImportJob,
+    LibraryMembership,
     Track,
 )
 
-admin.site.register([Artist, Album, Artwork, AudioFile, Track, ImportJob, AuditEvent])
+admin.site.register(
+    [Artist, Album, Artwork, AudioFile, Track, LibraryMembership, ImportJob, AuditEvent]
+)

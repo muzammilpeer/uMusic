@@ -116,6 +116,43 @@ class Track(models.Model):
         return f"{self.artist.name} — {self.title}"
 
 
+class LibraryMembership(models.Model):
+    class State(models.TextChoices):
+        ACTIVE = "active", "Active"
+        REMOVED = "removed", "Removed"
+
+    class Source(models.TextChoices):
+        UPLOAD = "upload", "Upload"
+        REMOTE_IMPORT = "remote_import", "Remote import"
+        BACKFILL = "backfill", "Backfill"
+        ADMIN = "admin", "Administrator"
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="library_memberships"
+    )
+    track = models.ForeignKey(Track, on_delete=models.PROTECT, related_name="memberships")
+    state = models.CharField(max_length=16, choices=State.choices, default=State.ACTIVE)
+    source = models.CharField(max_length=32, choices=Source.choices, default=Source.UPLOAD)
+    added_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    removed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["-added_at"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["owner", "track"], name="library_unique_owner_track_membership"
+            )
+        ]
+        indexes = [
+            models.Index(fields=["owner", "state"], name="library_owner_state_idx")
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.owner}: {self.track} ({self.state})"
+
+
 class ImportJob(models.Model):
     class Status(models.TextChoices):
         PENDING = "pending", "Pending"

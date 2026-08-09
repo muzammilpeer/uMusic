@@ -3,8 +3,10 @@ Django==5.2.7
 django-environ==0.12.0
 djangorestframework==3.16.1
 gunicorn==23.0.0
+mutagen==1.47.0
 psycopg[binary]==3.2.10
 redis==5.2.1
+yt-dlp==2026.6.9
 
 [dev]
 coverage[toml]==7.10.7

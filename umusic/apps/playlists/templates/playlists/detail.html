@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block title %}{{ playlist.name }} · uMusic{% endblock %}
+{% block content %}
+<h1>{{ playlist.name }}</h1><p>Owner {{ playlist.owner.username }} · role {{ role }}</p>
+<section class="card"><h2>Songs</h2>{% for item in playlist.items.all %}<p>{{ item.track.artist.name }} — {{ item.track.title }}{% if role != 'owner' %}<form method="post" style="display:inline">{% csrf_token %}<input type="hidden" name="action" value="save"><input type="hidden" name="track_id" value="{{ item.track_id }}"><button>Save to My Library</button></form>{% endif %}</p>{% empty %}<p>No songs.</p>{% endfor %}</section>
+{% if role == 'owner' %}<section class="card"><h2>Invite member</h2><form method="post">{% csrf_token %}<input type="hidden" name="action" value="invite"><label>Username or email <input name="identifier" required></label><select name="role"><option value="viewer">Viewer</option><option value="editor">Editor</option></select><button>Invite</button></form><h3>Members</h3>{% for member in members %}<p>{{ member.user.username }} · {{ member.role }} <form method="post" style="display:inline">{% csrf_token %}<input type="hidden" name="action" value="revoke"><input type="hidden" name="user_id" value="{{ member.user_id }}"><button>Revoke</button></form></p>{% empty %}<p>No members.</p>{% endfor %}</section>{% else %}<form method="post">{% csrf_token %}<button name="action" value="leave">Leave playlist</button></form>{% endif %}
+{% endblock %}

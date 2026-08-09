@@ -94,7 +94,7 @@ struct APIClient: MusicAPI, RemoteImportAPI {
     }
 
     func updatePlaylist(
-        server: URL, token: String, playlistID: UUID, trackIDs: [UUID]
+        server: URL, token: String, playlistID: UUID, trackIDs: [UUID], revision: Int
     ) async throws -> Playlist {
         var request = authorized(
             server.appending(path: "api/v1/playlists/\(playlistID.uuidString.lowercased())/"), token: token
@@ -102,9 +102,57 @@ struct APIClient: MusicAPI, RemoteImportAPI {
         request.httpMethod = "PATCH"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = try JSONSerialization.data(withJSONObject: [
-            "track_ids": trackIDs.map(\.uuidString)
+            "track_ids": trackIDs.map(\.uuidString),
+            "revision": revision,
         ])
         return try await send(request, as: Playlist.self)
+    }
+
+    func playlistInvitations(server: URL, token: String) async throws
+        -> [PlaylistInvitation]
+    {
+        try await send(
+            authorized(server.appending(path: "api/v1/playlists/invitations/"), token: token),
+            as: [PlaylistInvitation].self
+        )
+    }
+
+    func respondToInvitation(
+        server: URL, token: String, invitationID: UUID, accept: Bool
+    ) async throws {
+        var request = authorized(
+            server.appending(
+                path: "api/v1/playlists/invitations/\(invitationID.uuidString.lowercased())/respond/"
+            ), token: token
+        )
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try JSONSerialization.data(withJSONObject: [
+            "action": accept ? "accept" : "decline"
+        ])
+        try await sendWithoutBody(request)
+    }
+
+    func saveSharedTrack(
+        server: URL, token: String, playlistID: UUID, trackID: UUID
+    ) async throws {
+        var request = authorized(
+            server.appending(
+                path: "api/v1/playlists/\(playlistID.uuidString.lowercased())/tracks/\(trackID.uuidString.lowercased())/save/"
+            ), token: token
+        )
+        request.httpMethod = "POST"
+        try await sendWithoutBody(request)
+    }
+
+    func leavePlaylist(server: URL, token: String, playlistID: UUID) async throws {
+        var request = authorized(
+            server.appending(
+                path: "api/v1/playlists/\(playlistID.uuidString.lowercased())/leave/"
+            ), token: token
+        )
+        request.httpMethod = "POST"
+        try await sendWithoutBody(request)
     }
 
     func upload(server: URL, token: String, events: [ListeningEvent]) async throws {
@@ -156,6 +204,13 @@ struct APIClient: MusicAPI, RemoteImportAPI {
         guard (200..<300).contains(http.statusCode) else { throw APIError.server(http.statusCode) }
         do { return try JSONDecoder.uMusic.decode(T.self, from: data) }
         catch { throw APIError.invalidResponse }
+    }
+
+    private func sendWithoutBody(_ request: URLRequest) async throws {
+        let (_, response) = try await session.data(for: request)
+        guard let http = response as? HTTPURLResponse else { throw APIError.invalidResponse }
+        if http.statusCode == 401 || http.statusCode == 403 { throw APIError.unauthorized }
+        guard (200..<300).contains(http.statusCode) else { throw APIError.server(http.statusCode) }
     }
 
     private var platformName: String {

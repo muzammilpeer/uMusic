@@ -2,7 +2,7 @@ import pytest
 from rest_framework.test import APIClient
 
 from umusic.apps.accounts.models import User
-from umusic.apps.library.models import Album, Artist, AudioFile, Track
+from umusic.apps.library.models import Album, Artist, AudioFile, LibraryMembership, Track
 
 
 @pytest.mark.django_db
@@ -23,6 +23,7 @@ def test_paginated_mobile_catalog_and_search() -> None:
     track = Track.objects.create(
         title="Kelly Watch the Stars", artist=artist, album=album, audio_file=audio
     )
+    LibraryMembership.objects.create(owner=owner, track=track)
     client = APIClient()
     client.force_authenticate(owner)
     response = client.get("/api/v1/tracks?q=Kelly")

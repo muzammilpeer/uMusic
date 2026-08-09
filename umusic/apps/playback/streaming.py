@@ -8,7 +8,7 @@ from django.http import HttpRequest, HttpResponse, StreamingHttpResponse
 from django.http.response import HttpResponseBase
 from django.shortcuts import get_object_or_404
 
-from umusic.apps.library.models import Track
+from umusic.apps.library.services import playable_tracks
 from umusic.apps.library.storage import get_storage_for_backend
 
 RANGE_PATTERN = re.compile(r"^bytes=(\d*)-(\d*)$")
@@ -51,7 +51,7 @@ def stream_track(request: HttpRequest, track_id: str) -> HttpResponseBase:
     if not request.user.is_authenticated:
         return HttpResponse(status=401)
     track = get_object_or_404(
-        Track.objects.select_related("audio_file"), id=track_id, is_active=True
+        playable_tracks(request.user).select_related("audio_file"), id=track_id
     )
     audio = track.audio_file
     storage = get_storage_for_backend(audio.storage_backend)

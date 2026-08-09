@@ -46,6 +46,7 @@ class MeView(APIView):
             {
                 "id": str(request.user.id),
                 "username": request.user.username,
+                "storage_quota_bytes": request.user.storage_quota_bytes,
                 "device": _device_data(device) if device else None,
             }
         )

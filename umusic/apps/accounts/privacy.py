@@ -3,6 +3,7 @@ from typing import Any
 from umusic.apps.accounts.models import Device, User
 from umusic.apps.contexts.models import ContextSnapshot, Geofence
 from umusic.apps.events.models import ListeningEvent, PlayFact
+from umusic.apps.library.models import LibraryMembership
 from umusic.apps.playlists.models import Playlist
 from umusic.apps.recommendations.models import Affinity, GeneratedPlaylist, LearningRun
 
@@ -14,7 +15,15 @@ def _rows(queryset: Any, *fields: str) -> list[dict[str, Any]]:
 def export_owner_data(owner: User) -> dict[str, object]:
     return {
         "schema_version": 1,
-        "profile": {"username": owner.username, "email": owner.email},
+        "profile": {
+            "username": owner.username,
+            "email": owner.email,
+            "storage_quota_bytes": owner.storage_quota_bytes,
+        },
+        "library_memberships": _rows(
+            LibraryMembership.objects.filter(owner=owner),
+            "track_id", "state", "source", "added_at", "removed_at",
+        ),
         "devices": _rows(
             Device.objects.filter(owner=owner),
             "id", "name", "platform", "scopes", "last_seen_at", "revoked_at", "created_at",

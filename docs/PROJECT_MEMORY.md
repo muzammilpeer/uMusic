@@ -29,8 +29,8 @@ This repository contains a private, self-hosted adaptive music system:
 - Downloads default to Wi-Fi-only; least-recently-used rolling files are evicted first.
 - Songs can be removed from a playlist, from device storage, or—after administrator confirmation—from the server.
 - Listening events are stored locally and uploaded in batches.
-- Offline session duration is user-selectable. Recommendation energy is currently an
-  internal balanced default (`0.75`); do not restore an unexplained slider.
+- Offline preparation targets the user-selected byte quota rather than a duration cap.
+  Recommendation energy is currently an internal balanced default (`0.75`).
 
 ## Current backend/API behavior
 
@@ -92,14 +92,16 @@ This repository contains a private, self-hosted adaptive music system:
 - Public iOS APIs do not expose AirPods or generic Bluetooth-headset battery percentages.
 - Standard Lock Screen media controls cannot contain arbitrary workout statistics; that requires a future ActivityKit Widget/Live Activity extension.
 
-## Planned multi-user work (not implemented)
+## Multi-user roadmap
 
-- [Sprint 14](sprints/sprint-14/README.md) introduces private per-user library
-  memberships while retaining deduplicated global MP3/catalog objects, strict tenant
-  isolation, quotas, migration/backfill, and two-user authorization tests.
+- [Sprint 14](sprints/sprint-14/README.md) is complete and deployed. Private per-user
+  memberships, quotas, owner-filtered APIs, deduplicated imports, and device isolation
+  are active. The production admin owns 66 backfilled active memberships; the pre-change
+  backup and isolated restore are verified.
 - [Sprint 15](sprints/sprint-15/README.md) adds private-by-default playlist sharing,
   owner/editor/viewer roles, expiring invitations, revocation, collaborative updates,
-  and web/SwiftUI workflows.
+  and web/SwiftUI workflows. Its implementation is complete locally, but full regression,
+  production migration/deployment, and physical three-user acceptance are still pending.
 - [Sprint 16](sprints/sprint-16/README.md) adds private synchronized Listening Rooms
   over LAN or internet using authenticated realtime coordination, local pre-caching,
   clock calibration, drift correction, readiness, and reconnect recovery.

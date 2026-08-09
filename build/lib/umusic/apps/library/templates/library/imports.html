@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Imports · uMusic{% endblock %}
+{% block content %}
+  <h1>Recent imports</h1>
+  <section class="card">
+    {% if jobs %}
+      <table>
+        <thead><tr><th>File</th><th>Status</th><th>Track/error</th><th>Created</th></tr></thead>
+        <tbody>
+          {% for job in jobs %}
+            <tr>
+              <td><a href="{% url 'library:import-detail' job.id %}">{{ job.source_filename }}</a></td>
+              <td>{{ job.get_status_display }}</td>
+              <td>{% if job.track %}{{ job.track }}{% elif job.error_message %}<span class="error">{{ job.error_message }}</span>{% else %}—{% endif %}</td>
+              <td>{{ job.created_at }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}<p>No import jobs yet.</p>{% endif %}
+  </section>
+{% endblock %}

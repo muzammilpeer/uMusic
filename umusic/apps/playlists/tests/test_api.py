@@ -29,7 +29,12 @@ def test_playlist_edit_list_and_delete(client: Client) -> None:
     url = reverse("api-playlist", args=[created.json()["id"]])
     edited = client.patch(
         url,
-        data={"name": "Fast Cycling", "description": "Road music", "track_ids": []},
+        data={
+            "name": "Fast Cycling",
+            "description": "Road music",
+            "track_ids": [],
+            "revision": created.json()["revision"],
+        },
         content_type="application/json",
     )
     assert edited.status_code == 200

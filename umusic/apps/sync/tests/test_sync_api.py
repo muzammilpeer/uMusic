@@ -9,7 +9,7 @@ from rest_framework.test import APIClient
 
 from umusic.apps.accounts.models import Device, User
 from umusic.apps.contexts.models import Activity
-from umusic.apps.library.models import Artist, AudioFile, Track
+from umusic.apps.library.models import Artist, AudioFile, LibraryMembership, Track
 from umusic.apps.library.storage import audio_object_key
 from umusic.apps.recommendations.models import GeneratedPlaylist, GeneratedPlaylistTrack
 
@@ -37,6 +37,7 @@ def test_manifest_acknowledgement_and_download(
         duration_ms=120_000,
     )
     track = Track.objects.create(title="Song", artist=artist, audio_file=audio)
+    LibraryMembership.objects.create(owner=owner, track=track)
     playlist = GeneratedPlaylist.objects.create(
         owner=owner,
         activity_kind="cycling",
@@ -118,6 +119,7 @@ def test_server_to_prepared_airplane_mode_workout_journey(
             title=f"Ride {index}", artist=artist, audio_file=audio,
             energy=0.5 + index * 0.2,
         )
+        LibraryMembership.objects.create(owner=owner, track=track)
         expected[str(track.id)] = content
 
     client = APIClient()

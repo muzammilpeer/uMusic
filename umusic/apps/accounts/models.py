@@ -10,6 +10,8 @@ from django.db import models
 class User(AbstractUser):
     """Project user model, established before the first migration."""
 
+    storage_quota_bytes = models.PositiveBigIntegerField(default=5 * 1024 * 1024 * 1024)
+
 
 class Device(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)

@@ -8,7 +8,7 @@ from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.db.models import Q
-from django.http import HttpRequest, HttpResponse, HttpResponseForbidden
+from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.utils.text import slugify
@@ -23,9 +23,10 @@ from umusic.apps.imports.adapters import enabled_adapters
 from umusic.apps.imports.models import AdapterJob, TasteCandidate
 from umusic.apps.imports.remote_services import create_remote_import
 from umusic.apps.library.forms import TrackMetadataForm
-from umusic.apps.library.models import Album, Artist, ImportJob, Track
+from umusic.apps.library.models import Album, Artist, ImportJob
 from umusic.apps.library.services import (
     ImportFailure,
+    accessible_tracks,
     remove_track_from_library,
     update_track_metadata,
 )
@@ -45,7 +46,9 @@ from umusic.apps.recommendations.services import rebuild_affinities, reset_learn
 @login_required
 def index(request: HttpRequest) -> HttpResponse:
     query = request.GET.get("q", "").strip()
-    tracks = Track.objects.filter(is_active=True).select_related("artist", "album", "audio_file")
+    user = request.user
+    assert isinstance(user, User)
+    tracks = accessible_tracks(user).select_related("artist", "album", "audio_file")
     if query:
         tracks = tracks.filter(
             Q(title__icontains=query)
@@ -53,8 +56,6 @@ def index(request: HttpRequest) -> HttpResponse:
             | Q(album__title__icontains=query)
         )
     page = Paginator(tracks, 50).get_page(request.GET.get("page"))
-    user = request.user
-    assert isinstance(user, User)
     playlists = Playlist.objects.filter(owner=user)
     return render(
         request, "library/index.html", {"page": page, "query": query, "playlists": playlists}
@@ -63,22 +64,18 @@ def index(request: HttpRequest) -> HttpResponse:
 
 @login_required
 def track_detail(request: HttpRequest, track_id: Any) -> HttpResponse:
+    user = request.user
+    assert isinstance(user, User)
     track = get_object_or_404(
-        Track.objects.select_related("artist", "album", "audio_file"), id=track_id, is_active=True
+        accessible_tracks(user).select_related("artist", "album", "audio_file"),
+        id=track_id,
     )
     if request.method == "POST" and request.POST.get("action") == "delete":
-        if not request.user.is_staff:
-            return HttpResponseForbidden("Only a server administrator can delete library music.")
         if request.POST.get("confirmation") != "DELETE":
-            messages.error(request, "Type DELETE to confirm removal from the server.")
+            messages.error(request, "Type DELETE to confirm removal from your library.")
             return redirect("library:track-detail", track_id=track.id)
-        removed_file = remove_track_from_library(track, request.user)
-        messages.success(
-            request,
-            "Track removed from the library and MP3 storage."
-            if removed_file
-            else "Track removed from the library; its MP3 was already missing.",
-        )
+        remove_track_from_library(track, user)
+        messages.success(request, "Track removed from your private library.")
         return redirect("library:index")
     initial = {
         "title": track.title,
@@ -92,7 +89,12 @@ def track_detail(request: HttpRequest, track_id: Any) -> HttpResponse:
     form = TrackMetadataForm(request.POST or None, initial=initial)
     if request.method == "POST" and form.is_valid():
         try:
-            update_track_metadata(track, request.user, form.cleaned_data)
+            if track.memberships.filter(state="active").exclude(owner=user).exists():
+                raise ImportFailure(
+                    "SHARED_METADATA",
+                    "This catalog file is shared by another library and cannot be edited here.",
+                )
+            update_track_metadata(track, user, form.cleaned_data)
             messages.success(request, "MP3 tags, library metadata, checksum, and filename updated.")
             return redirect("library:track-detail", track_id=track.id)
         except ImportFailure as error:
@@ -104,15 +106,22 @@ def track_detail(request: HttpRequest, track_id: Any) -> HttpResponse:
 
 @login_required
 def artist_detail(request: HttpRequest, artist_id: Any) -> HttpResponse:
-    artist = get_object_or_404(Artist, id=artist_id)
-    tracks = artist.tracks.filter(is_active=True).select_related("artist", "album", "audio_file")
+    tracks = accessible_tracks(request.user).filter(artist_id=artist_id).select_related(
+        "artist", "album", "audio_file"
+    )
+    artist = get_object_or_404(Artist, id=artist_id, tracks__in=tracks)
     return render(request, "library/artist_detail.html", {"artist": artist, "tracks": tracks})
 
 
 @login_required
 def album_detail(request: HttpRequest, album_id: Any) -> HttpResponse:
-    album = get_object_or_404(Album.objects.select_related("album_artist"), id=album_id)
-    tracks = album.tracks.filter(is_active=True).select_related("artist", "album", "audio_file")
+    tracks = accessible_tracks(request.user).filter(album_id=album_id).select_related(
+        "artist", "album", "audio_file"
+    )
+    album = get_object_or_404(
+        Album.objects.select_related("album_artist").filter(tracks__in=tracks).distinct(),
+        id=album_id,
+    )
     return render(request, "library/album_detail.html", {"album": album, "tracks": tracks})
 
 

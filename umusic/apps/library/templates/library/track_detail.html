@@ -6,12 +6,12 @@
 {% if request.user.is_staff %}
 <section class="card">
   <h2>Remove music</h2>
-  <p class="error">This removes the MP3 from server storage and hides the track from every player. Listening history remains for audit and learning integrity.</p>
+  <p class="error">This removes the song from your private library. Shared catalog media and listening history remain intact.</p>
   <form method="post">
     {% csrf_token %}
     <input type="hidden" name="action" value="delete">
     <label>Type <strong>DELETE</strong> to confirm <input name="confirmation" autocomplete="off" required></label>
-    <button type="submit">Delete MP3 from server</button>
+    <button type="submit">Remove from my library</button>
   </form>
 </section>
 {% endif %}

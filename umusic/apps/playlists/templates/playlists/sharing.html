@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Shared playlists · uMusic{% endblock %}
+{% block content %}
+<h1>Shared playlists</h1>
+<section class="card"><h2>Invitations</h2>
+{% for invite in invitations %}<p><strong>{{ invite.playlist.name }}</strong> · {{ invite.role }} from {{ invite.invited_by.username }}
+<form method="post" action="{% url 'playlist-sharing-invitation-response' invite.id %}" style="display:inline">{% csrf_token %}<button name="action" value="accept">Accept</button> <button name="action" value="decline">Decline</button></form></p>
+{% empty %}<p>No pending invitations.</p>{% endfor %}</section>
+<section class="card"><h2>Your playlists</h2>
+{% for playlist in playlists %}<p><a href="{% url 'playlist-sharing-detail' playlist.id %}">{{ playlist.name }}</a> · owner {{ playlist.owner.username }}</p>
+{% empty %}<p>No playlists.</p>{% endfor %}</section>
+{% endblock %}

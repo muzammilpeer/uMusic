@@ -17,7 +17,7 @@ from umusic.apps.imports.remote_services import (
     parse_remote_urls,
     run_remote_import,
 )
-from umusic.apps.library.models import Artist, AudioFile, Track
+from umusic.apps.library.models import Artist, AudioFile, LibraryMembership, Track
 from umusic.apps.library.tests.conftest import SILENT_MP3_BASE64
 
 
@@ -74,7 +74,8 @@ def test_taste_exact_probable_and_unmatched_require_confirmation(settings: Any) 
         size_bytes=1,
         duration_ms=1000,
     )
-    Track.objects.create(title="Around the World", artist=artist, audio_file=audio)
+    track = Track.objects.create(title="Around the World", artist=artist, audio_file=audio)
+    LibraryMembership.objects.create(owner=owner, track=track)
     job = import_taste(
         owner,
         [
@@ -115,7 +116,8 @@ def test_taste_adapter_api_and_confirmation_inbox(client: Client, settings: Any)
         size_bytes=1,
         duration_ms=1000,
     )
-    Track.objects.create(title="Teardrop", artist=artist, audio_file=audio)
+    track = Track.objects.create(title="Teardrop", artist=artist, audio_file=audio)
+    LibraryMembership.objects.create(owner=owner, track=track)
     client.force_login(owner)
     assert client.get(reverse("api-adapters")).json()["enabled"]
     response = client.post(

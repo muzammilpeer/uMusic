@@ -62,12 +62,44 @@ struct Playlist: Codable, Hashable, Identifiable, Sendable {
     let name: String
     let description: String
     let tracks: [PlaylistTrack]
+    let revision: Int?
+    let role: String?
+    let owner: String?
 }
 
 struct PlaylistTrack: Codable, Hashable, Identifiable, Sendable {
     let id: UUID
     let title: String
     let artist: String
+}
+
+struct PlaylistInvitation: Codable, Hashable, Identifiable, Sendable {
+    let id: UUID
+    let playlistID: UUID
+    let playlistName: String
+    let invitedBy: String?
+    let role: String
+    let expiresAt: Date
+
+    enum CodingKeys: String, CodingKey {
+        case id, role
+        case playlistID = "playlist_id"
+        case playlistName = "playlist_name"
+        case invitedBy = "invited_by"
+        case expiresAt = "expires_at"
+    }
+}
+
+struct PlaylistMember: Codable, Hashable, Identifiable, Sendable {
+    let userID: Int
+    let username: String
+    let role: String
+    var id: Int { userID }
+
+    enum CodingKeys: String, CodingKey {
+        case username, role
+        case userID = "user_id"
+    }
 }
 
 struct Device: Codable, Sendable {

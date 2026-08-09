@@ -1,7 +1,7 @@
 import SwiftUI
 
 private enum SidebarDestination: String, CaseIterable, Identifiable {
-    case music, downloads, activity, queue, importMusic, admin
+    case music, sharedInvites, downloads, activity, queue, importMusic, admin
     var id: Self { self }
 }
 
@@ -23,6 +23,9 @@ struct LibraryView: View {
                     }
                     NavigationLink(value: SidebarDestination.downloads) {
                         Label("Sync & Downloads", systemImage: "arrow.down.circle")
+                    }
+                    NavigationLink(value: SidebarDestination.sharedInvites) {
+                        Label("Shared Invitations", systemImage: "person.2.badge.plus")
                     }
                     NavigationLink(value: SidebarDestination.activity) {
                         Label("Activity", systemImage: "figure.run")
@@ -76,6 +79,8 @@ struct LibraryView: View {
             musicLibrary
         case .downloads:
             OfflineView()
+        case .sharedInvites:
+            PlaylistInvitationsView()
         case .activity:
             WorkoutView()
         case .queue:
@@ -94,7 +99,12 @@ struct LibraryView: View {
                     Section("Playlists") {
                     ForEach(model.playlists) { playlist in
                         NavigationLink(value: playlist) {
-                            Label(playlist.name, systemImage: "music.note")
+                            HStack {
+                                Label(playlist.name, systemImage: "music.note")
+                                Spacer()
+                                Text(playlist.role?.capitalized ?? "Owner")
+                                    .font(.caption).foregroundStyle(.secondary)
+                            }
                         }
                     }
                 }
@@ -118,7 +128,7 @@ struct LibraryView: View {
                         }
                         .buttonStyle(.plain)
                         .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                            Button("Delete from Server", systemImage: "trash", role: .destructive) {
+                            Button("Remove from Library", systemImage: "trash", role: .destructive) {
                                 trackPendingServerDelete = track
                             }
                         }
@@ -141,14 +151,14 @@ struct LibraryView: View {
         }
         .searchable(text: $model.query, prompt: "Tracks, artists, albums")
         .confirmationDialog(
-            "Delete song from server?",
+            "Remove song from your library?",
             isPresented: Binding(
                 get: { trackPendingServerDelete != nil },
                 set: { if !$0 { trackPendingServerDelete = nil } }
             ),
             presenting: trackPendingServerDelete
         ) { track in
-            Button("Delete \(track.title) from Server", role: .destructive) {
+            Button("Remove \(track.title)", role: .destructive) {
                 guard let server = session.server, let token = session.token else { return }
                 Task {
                     if await model.deleteFromServer(track, server: server, token: token) {
@@ -157,7 +167,7 @@ struct LibraryView: View {
                 }
             }
         } message: { track in
-            Text("This permanently removes the MP3 for \(track.title) from your server. Listening history is preserved. This cannot be undone.")
+            Text("This removes the song from your private library. Shared server media and listening history remain intact.")
         }
     }
 
@@ -196,12 +206,15 @@ struct PlaylistView: View {
     @EnvironmentObject private var player: AudioPlayer
     @EnvironmentObject private var session: SessionStore
     @State private var items: [PlaylistTrack]
+    @State private var revision: Int
     @State private var pendingRemoval: PlaylistTrack?
+    @State private var message: String?
 
     init(playlist: Playlist, libraryTracks: [Track]) {
         self.playlist = playlist
         self.libraryTracks = libraryTracks
         _items = State(initialValue: playlist.tracks)
+        _revision = State(initialValue: playlist.revision ?? 1)
     }
 
     var body: some View {
@@ -213,21 +226,61 @@ struct PlaylistView: View {
                 }
                 Spacer()
                 Button("Play", systemImage: "play.fill") {
-                    guard let track = libraryTracks.first(where: { $0.id == item.id }) else { return }
-                    let queue = items.compactMap { playlistTrack in
-                        libraryTracks.first(where: { $0.id == playlistTrack.id })
+                    if let track = libraryTracks.first(where: { $0.id == item.id }) {
+                        player.play(track, in: libraryTracks)
+                    } else if let server = session.server, let token = session.token {
+                        Task {
+                            do {
+                                let track = try await APIClient().track(
+                                    server: server, token: token, trackID: item.id
+                                )
+                                player.play(track, in: [track])
+                            } catch { message = error.localizedDescription }
+                        }
                     }
-                    player.play(track, in: queue)
                 }
-                .disabled(!libraryTracks.contains(where: { $0.id == item.id }))
             }
             .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                Button("Remove", systemImage: "minus.circle", role: .destructive) {
-                    pendingRemoval = item
+                if playlist.role == "owner" || playlist.role == "editor" {
+                    Button("Remove", systemImage: "minus.circle", role: .destructive) {
+                        pendingRemoval = item
+                    }
+                }
+                if playlist.role != "owner" {
+                    Button("Save", systemImage: "square.and.arrow.down") {
+                        guard let server = session.server, let token = session.token else { return }
+                        Task {
+                            do {
+                                try await APIClient().saveSharedTrack(
+                                    server: server, token: token,
+                                    playlistID: playlist.id, trackID: item.id
+                                )
+                                message = "Saved to My Library. Press Sync to refresh songs."
+                            } catch { message = error.localizedDescription }
+                        }
+                    }.tint(.blue)
                 }
             }
         }
         .navigationTitle(playlist.name)
+        .toolbar {
+            if playlist.role != "owner" {
+                Button("Leave", systemImage: "rectangle.portrait.and.arrow.right", role: .destructive) {
+                    guard let server = session.server, let token = session.token else { return }
+                    Task {
+                        do {
+                            try await APIClient().leavePlaylist(
+                                server: server, token: token, playlistID: playlist.id
+                            )
+                            message = "You left this playlist. Press Sync to refresh."
+                        } catch { message = error.localizedDescription }
+                    }
+                }
+            }
+        }
+        .alert("Playlist", isPresented: Binding(
+            get: { message != nil }, set: { if !$0 { message = nil } }
+        )) { Button("OK") { message = nil } } message: { Text(message ?? "") }
         .confirmationDialog(
             "Remove from playlist?",
             isPresented: Binding(
@@ -242,15 +295,70 @@ struct PlaylistView: View {
                     let remaining = items.filter { $0.id != item.id }
                     if let updated = try? await APIClient().updatePlaylist(
                         server: server, token: token, playlistID: playlist.id,
-                        trackIDs: remaining.map(\.id)
+                        trackIDs: remaining.map(\.id), revision: revision
                     ) {
                         items = updated.tracks
+                        revision = updated.revision ?? revision + 1
                         pendingRemoval = nil
                     }
                 }
             }
         } message: { _ in
             Text("This removes the song from this playlist only. The server MP3 remains available.")
+        }
+    }
+}
+
+struct PlaylistInvitationsView: View {
+    @EnvironmentObject private var session: SessionStore
+    @State private var invitations: [PlaylistInvitation] = []
+    @State private var message: String?
+
+    var body: some View {
+        NavigationStack {
+            List(invitations) { invite in
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(invite.playlistName).font(.headline)
+                    Text("\(invite.invitedBy ?? "A user") invited you as \(invite.role).")
+                        .foregroundStyle(.secondary)
+                    HStack {
+                        Button("Accept") { respond(invite, accept: true) }
+                            .buttonStyle(.borderedProminent)
+                        Button("Decline", role: .destructive) { respond(invite, accept: false) }
+                            .buttonStyle(.bordered)
+                    }
+                }.padding(.vertical, 4)
+            }
+            .overlay {
+                if invitations.isEmpty {
+                    ContentUnavailableView("No Invitations", systemImage: "person.2")
+                }
+            }
+            .navigationTitle("Shared Invitations")
+            .task { await load() }
+            .refreshable { await load() }
+            .alert("Sharing", isPresented: Binding(
+                get: { message != nil }, set: { if !$0 { message = nil } }
+            )) { Button("OK") { message = nil } } message: { Text(message ?? "") }
+        }
+    }
+
+    private func load() async {
+        guard let server = session.server, let token = session.token else { return }
+        do { invitations = try await APIClient().playlistInvitations(server: server, token: token) }
+        catch { message = error.localizedDescription }
+    }
+
+    private func respond(_ invitation: PlaylistInvitation, accept: Bool) {
+        guard let server = session.server, let token = session.token else { return }
+        Task {
+            do {
+                try await APIClient().respondToInvitation(
+                    server: server, token: token, invitationID: invitation.id, accept: accept
+                )
+                invitations.removeAll { $0.id == invitation.id }
+                message = accept ? "Playlist accepted. Press Sync in Songs." : "Invitation declined."
+            } catch { message = error.localizedDescription }
         }
     }
 }

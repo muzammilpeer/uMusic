@@ -8,7 +8,7 @@ from django.urls import reverse
 from umusic.apps.accounts.models import User
 from umusic.apps.events.models import ListeningEvent, PlayFact
 from umusic.apps.events.services import MAX_LISTENED_DELTA_MS, rebuild_play_facts
-from umusic.apps.library.models import Artist, AudioFile, Track
+from umusic.apps.library.models import Artist, AudioFile, LibraryMembership, Track
 
 
 @pytest.fixture
@@ -23,7 +23,9 @@ def owner_and_track(db: object) -> tuple[User, Track]:
         size_bytes=100,
         duration_ms=100_000,
     )
-    return owner, Track.objects.create(title="Signals", artist=artist, audio_file=audio)
+    track = Track.objects.create(title="Signals", artist=artist, audio_file=audio)
+    LibraryMembership.objects.create(owner=owner, track=track)
+    return owner, track
 
 
 def payload(

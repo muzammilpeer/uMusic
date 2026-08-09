@@ -27,6 +27,7 @@ urlpatterns = [
     path("api/v1/", include("umusic.apps.sync.urls")),
     path("api/v1/", include("umusic.apps.library.api_urls")),
     path("library/", include("umusic.apps.library.urls")),
+    path("playlists/", include("umusic.apps.playlists.web_urls")),
     path("api/v1/imports/", include("umusic.apps.imports.urls")),
     path("api/v1/adapters/", include("umusic.apps.imports.adapter_urls")),
     path("api/v1/tracks/", include("umusic.apps.playback.stream_urls")),

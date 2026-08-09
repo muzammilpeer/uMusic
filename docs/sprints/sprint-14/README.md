@@ -1,5 +1,7 @@
 # Sprint 14 — Multi-user accounts and private libraries
 
+**Status:** Complete and deployed — see [REPORT.md](REPORT.md).
+
 ## Goal
 
 Convert the single-owner installation into a safe multi-user system where every
