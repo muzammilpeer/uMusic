@@ -1,6 +1,7 @@
 import CoreData
 import Foundation
 import UMusicDomain
+import UMusicSupport
 
 public final class CatalogStore: @unchecked Sendable {
     private let container: NSPersistentContainer
@@ -12,6 +13,10 @@ public final class CatalogStore: @unchecked Sendable {
         description.type = NSSQLiteStoreType
         description.shouldMigrateStoreAutomatically = true
         description.shouldInferMappingModelAutomatically = true
+        description.setOption(["journal_mode": "WAL", "synchronous": "NORMAL"] as NSDictionary, forKey: NSSQLitePragmasOption)
+#if os(iOS)
+        description.setOption(FileProtectionType.completeUntilFirstUserAuthentication as NSObject, forKey: NSPersistentStoreFileProtectionKey)
+#endif
         if inMemory { description.url = URL(fileURLWithPath: "/dev/null") }
         else if let storeURL { description.url = storeURL }
         container.persistentStoreDescriptions = [description]
@@ -95,9 +100,11 @@ public final class CatalogStore: @unchecked Sendable {
     }
 
     public func browse(_ query: LibraryQuery) async throws -> [TrackSummary] {
+        let interval = PerformanceSignposts.begin("CatalogBrowse"); defer { PerformanceSignposts.end(interval) }
         try await ready.value
         return try await container.performBackgroundTask { context in
             let request = NSFetchRequest<NSManagedObject>(entityName: "Track")
+            request.fetchBatchSize = 500
             var predicates = [NSPredicate(format: "available == YES")]
             if let text = query.text?.trimmingCharacters(in: .whitespacesAndNewlines), !text.isEmpty {
                 predicates.append(NSPredicate(format: "title CONTAINS[cd] %@ OR artist CONTAINS[cd] %@ OR album CONTAINS[cd] %@ OR genres CONTAINS[cd] %@", text, text, text, text))
@@ -153,7 +160,10 @@ public final class CatalogStore: @unchecked Sendable {
             attribute("contentClassifications", .binaryDataAttributeType),
         ]
         track.uniquenessConstraints = [["id"]]
-        track.indexes = [NSFetchIndexDescription(name: "track_search", elements: [NSFetchIndexElementDescription(property: track.propertiesByName["title"]!, collationType: .binary), NSFetchIndexElementDescription(property: track.propertiesByName["artist"]!, collationType: .binary)])]
+        track.indexes = ["id", "title", "artist", "album", "genres", "language", "releaseYear", "available"].compactMap { name in
+            guard let property = track.propertiesByName[name] else { return nil }
+            return NSFetchIndexDescription(name: "track_\(name)", elements: [NSFetchIndexElementDescription(property: property, collationType: .binary)])
+        }
         let state = NSEntityDescription(); state.name = "SyncState"; state.managedObjectClassName = "NSManagedObject"
         state.properties = [attribute("key", .stringAttributeType, optional: false), attribute("cursor", .stringAttributeType), attribute("lastSyncAt", .dateAttributeType)]
         state.uniquenessConstraints = [["key"]]

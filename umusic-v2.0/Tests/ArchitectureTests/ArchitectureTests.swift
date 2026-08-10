@@ -9,17 +9,18 @@ private struct ModuleRule {
 private let rules = [
     ModuleRule(module: "UMusicDomain", allowedImports: ["Foundation"]),
     ModuleRule(module: "UMusicSupport", allowedImports: ["Foundation", "os"]),
-    ModuleRule(module: "UMusicData", allowedImports: ["CoreData", "Foundation", "UMusicDomain", "UMusicSupport"]),
+    ModuleRule(module: "UMusicData", allowedImports: ["CoreData", "CryptoKit", "Foundation", "UMusicDomain", "UMusicSupport"]),
     ModuleRule(module: "UMusicNetworking", allowedImports: ["Foundation", "UMusicDomain", "UMusicSupport"]),
     ModuleRule(module: "UMusicPlayback", allowedImports: ["AVFoundation", "Foundation", "MediaPlayer", "UMusicDomain", "UMusicSupport"]),
     ModuleRule(module: "UMusicOffline", allowedImports: ["CryptoKit", "Foundation", "UMusicDomain", "UMusicSupport"]),
     ModuleRule(module: "UMusicContext", allowedImports: ["AVFoundation", "Foundation", "Network", "UMusicDomain", "UMusicSupport"]),
     ModuleRule(module: "UMusicLearning", allowedImports: ["Foundation", "UMusicDomain", "UMusicML", "UMusicSupport"]),
     ModuleRule(module: "UMusicML", allowedImports: ["CoreML", "CryptoKit", "Foundation", "UMusicDomain", "UMusicSupport"]),
-    ModuleRule(module: "UMusicTelemetry", allowedImports: ["UMusicDomain", "UMusicSupport"]),
+    ModuleRule(module: "UMusicTelemetry", allowedImports: ["Foundation", "UMusicDomain", "UMusicSupport"]),
     ModuleRule(module: "UMusicSecurity", allowedImports: ["Foundation", "Security", "UMusicDomain", "UMusicSupport"]),
     ModuleRule(module: "UMusicCore", allowedImports: ["Foundation", "UMusicContext", "UMusicData", "UMusicDomain", "UMusicLearning", "UMusicML", "UMusicNetworking", "UMusicOffline", "UMusicPlayback", "UMusicSecurity", "UMusicSupport"]),
     ModuleRule(module: "UMusicImportClient", allowedImports: ["Foundation", "Security", "UMusicSupport"]),
+    ModuleRule(module: "UMusicMigration", allowedImports: ["CryptoKit", "Foundation", "UMusicDomain", "UMusicSupport"]),
     ModuleRule(module: "UMusicPresentation", allowedImports: ["Foundation", "Observation", "SwiftUI", "UMusicCore"]),
 ]
 

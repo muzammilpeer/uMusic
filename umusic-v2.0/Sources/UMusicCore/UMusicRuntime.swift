@@ -9,7 +9,7 @@ import UMusicSecurity
 import UMusicLearning
 
 public enum UMusicCoreVersion {
-    public static let current = "2.0.0-alpha.15"
+    public static let current = "2.0.0-alpha.19"
 }
 
 public struct DefaultUMusicClient: UMusicClient {
@@ -128,7 +128,7 @@ public enum UMusicCompositionRoot {
             playlists: playlists,
             personalization: learning,
             offline: offline,
-            diagnostics: PlaceholderDiagnosticsProvider(),
+            diagnostics: LocalDiagnosticsProvider(),
             context: context,
             calendarPreferences: calendarPreferences
         )

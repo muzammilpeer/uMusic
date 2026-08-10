@@ -1,6 +1,7 @@
 import CryptoKit
 import Foundation
 import UMusicDomain
+import UMusicSupport
 
 public struct RankerFeatureManifest: Codable, Equatable, Sendable {
     public let schemaVersion: Int
@@ -78,6 +79,7 @@ public actor ModelRankerLifecycle {
     public func evaluationSnapshot() -> ModelEvaluationSnapshot { .init(mode: mode, modelVersion: manifest.modelVersion, attempts: attempts, successes: successes, failures: failures, timeouts: timeouts) }
 
     public func rank(_ features: [[Double]]) async -> ModelRankingOutcome {
+        let interval = PerformanceSignposts.begin("ModelRank"); defer { PerformanceSignposts.end(interval) }
         guard mode != .disabled else { return .fallback(code: "model_disabled") }
         guard !features.isEmpty, features.count <= manifest.maximumBatchSize, features.allSatisfy({ $0.count == manifest.orderedFeatures.count && $0.allSatisfy(\.isFinite) }) else { return failed(.invalidFeatures) }
         let bounded = features.map { $0.map { min(max($0, -1_000_000), 1_000_000) } }

@@ -74,6 +74,7 @@ public protocol PersonalizationManaging: Sendable {
     func previewFullResearchExport() async -> ResearchExportPreview
     func exportResearch(_ kind: ResearchExportKind, confirmationID: UUID?) async throws -> URL
     func cleanupResearchExports() async
+    func discardResearchExport(at url: URL) async
     func resetLearning() async throws
 }
 

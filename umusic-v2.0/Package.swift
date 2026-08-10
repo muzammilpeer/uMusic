@@ -14,6 +14,7 @@ let package = Package(
         .library(name: "UMusicShareExtensionUI", targets: ["UMusicShareExtensionUI"]),
         .library(name: "UMusicPresentation", targets: ["UMusicPresentation"]),
         .library(name: "UMusicInspector", targets: ["UMusicInspector"]),
+        .library(name: "UMusicMigration", targets: ["UMusicMigration"]),
         .executable(name: "UMusicApp", targets: ["UMusicApp"]),
         .executable(name: "UMusicDataInspector", targets: ["UMusicDataInspector"]),
     ],
@@ -46,6 +47,7 @@ let package = Package(
             exclude: ["README.md", "UMusicShareExtension.entitlements"]
         ),
         .target(name: "UMusicInspector", dependencies: ["UMusicDomain", "UMusicSupport"]),
+        .target(name: "UMusicMigration", dependencies: ["UMusicDomain", "UMusicSupport"]),
         .target(name: "UMusicPresentation", dependencies: ["UMusicCore"]),
         .executableTarget(
             name: "UMusicApp",
@@ -53,10 +55,11 @@ let package = Package(
             path: "Apps/UMusicApp/App"
         ),
         .executableTarget(name: "UMusicDataInspector", dependencies: ["UMusicInspector"], path: "Apps/UMusicDataInspector"),
-        .testTarget(name: "UMusicCoreTests", dependencies: ["UMusicCore", "UMusicContext", "UMusicData", "UMusicDomain", "UMusicLearning", "UMusicML", "UMusicNetworking", "UMusicOffline", "UMusicSecurity", "UMusicSupport"]),
+        .testTarget(name: "UMusicCoreTests", dependencies: ["UMusicCore", "UMusicContext", "UMusicData", "UMusicDomain", "UMusicLearning", "UMusicML", "UMusicNetworking", "UMusicOffline", "UMusicSecurity", "UMusicSupport", "UMusicTelemetry"]),
         .testTarget(name: "ArchitectureTests", dependencies: ["UMusicCore"]),
         .testTarget(name: "UMusicPresentationTests", dependencies: ["UMusicPresentation"]),
         .testTarget(name: "UMusicImportClientTests", dependencies: ["UMusicImportClient"]),
         .testTarget(name: "UMusicInspectorTests", dependencies: ["UMusicInspector", "UMusicDomain"]),
+        .testTarget(name: "UMusicMigrationTests", dependencies: ["UMusicMigration", "UMusicDomain"]),
     ]
 )

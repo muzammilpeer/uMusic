@@ -209,6 +209,7 @@ struct PlaylistBrowser: View {
 
 struct SearchScreen: View {
     @Binding var query: String
+    @Binding var searchPresented: Bool
     let library: (any LibraryProviding)?; let playback: (any PlaybackControlling)?; let offline: (any OfflineManaging)?; let playlists: (any PlaylistManaging)?
     @State private var results: [TrackSummary] = []
     @State private var playlistSummaries: [PlaylistSummary] = []
@@ -217,7 +218,7 @@ struct SearchScreen: View {
             if query.isEmpty { ContentUnavailableView("Search your cached library", systemImage: "magnifyingglass") }
             else { TrackListView(tracks: results, playback: playback, offline: offline, playlists: playlists, playlistSummaries: playlistSummaries) }
         }
-        .navigationTitle("Search").searchable(text: $query, prompt: "Songs, artists, albums, genres")
+        .navigationTitle("Search").searchable(text: $query, isPresented: $searchPresented, prompt: "Songs, artists, albums, genres")
         .scrollDismissesKeyboard(.interactively)
         .task { playlistSummaries = (try? await playlists?.playlists()) ?? [] }
         .task(id: query) {

@@ -233,9 +233,41 @@ public struct OfflineMediaEntry: Codable, Equatable, Sendable, Identifiable {
 public struct DiagnosticsSnapshot: Codable, Equatable, Sendable {
     public let frameworkVersion: String
     public let schemaVersion: Int
+    public let buildIdentifier: String
+    public let modelVersion: String
+    public let featureSchemaVersion: String
+    public let issues: [DiagnosticIssue]
 
-    public init(frameworkVersion: String, schemaVersion: Int) {
+    public init(frameworkVersion: String, schemaVersion: Int, buildIdentifier: String = "development", modelVersion: String = "uninstalled", featureSchemaVersion: String = "ranker-features-1", issues: [DiagnosticIssue] = []) {
         self.frameworkVersion = frameworkVersion
         self.schemaVersion = schemaVersion
+        self.buildIdentifier = buildIdentifier
+        self.modelVersion = modelVersion
+        self.featureSchemaVersion = featureSchemaVersion
+        self.issues = issues
+    }
+}
+
+public struct DiagnosticIssue: Codable, Equatable, Sendable, Identifiable {
+    public let code: String
+    public let metadata: [String: String]
+    public var id: String { code }
+    public init(code: String, metadata: [String: String] = [:]) {
+        let normalized = code.uppercased().map { $0.isLetter || $0.isNumber || $0 == "_" ? $0 : "_" }
+        self.code = String(normalized.prefix(64))
+        self.metadata = DiagnosticRedaction.sanitize(metadata)
+    }
+}
+
+public enum DiagnosticRedaction {
+    public static let forbiddenKeys = ["token", "password", "url", "path", "coordinate", "latitude", "longitude", "health", "username"]
+    public static func sanitize(_ metadata: [String: String]) -> [String: String] {
+        metadata.reduce(into: [:]) { result, entry in
+            let key = entry.key.lowercased()
+            guard !forbiddenKeys.contains(where: key.contains) else { return }
+            let value = entry.value
+            guard !value.contains("://"), !value.hasPrefix("/"), value.utf8.count <= 128 else { return }
+            result[entry.key] = value
+        }
     }
 }

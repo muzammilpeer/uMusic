@@ -1,13 +1,13 @@
 import Foundation
 
-public enum AppTab: String, CaseIterable, Hashable, Sendable {
+public enum AppTab: String, CaseIterable, Hashable, Codable, Sendable {
     case home
     case library
     case now
     case search
 }
 
-public enum AppRoute: Hashable, Sendable {
+public enum AppRoute: Hashable, Codable, Sendable {
     case track(UUID)
     case album(UUID)
     case artist(UUID)
@@ -16,7 +16,7 @@ public enum AppRoute: Hashable, Sendable {
     case settings(SettingsRoute)
 }
 
-public enum SettingsRoute: String, Hashable, Sendable {
+public enum SettingsRoute: String, Hashable, Codable, Sendable {
     case account
     case playback
     case offlineStorage
@@ -42,4 +42,3 @@ public enum PlayerRoute: Hashable, Sendable {
     case queue
     case visualizer
 }
-

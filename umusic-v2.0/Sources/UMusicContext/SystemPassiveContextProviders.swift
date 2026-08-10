@@ -17,7 +17,7 @@ public struct SystemAudioRouteProvider: AudioRouteProviding {
         if outputs.contains(where: { [.builtInSpeaker, .builtInReceiver].contains($0.portType) }) { return .builtIn }
         return .unknown
 #else
-        return .builtIn
+        return .unknown
 #endif
     }
 }

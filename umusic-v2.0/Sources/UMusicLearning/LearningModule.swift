@@ -191,6 +191,7 @@ public actor LocalLearningStore: PersonalizationManaging, PlaybackLearningRecord
     }
 
     public func cleanupResearchExports() async { ResearchPackageWriter.cleanup(olderThan: Date().addingTimeInterval(1)) }
+    public func discardResearchExport(at url: URL) async { ResearchPackageWriter.discard(url) }
 
     private func exportRecords() -> ResearchExportRecords {
         ResearchExportRecords(events: document.events, sessions: document.sessions, observations: document.observations, contexts: document.contexts, aggregates: document.aggregates.values.sorted { $0.trackID.uuidString < $1.trackID.uuidString }, featureAggregates: document.featureAggregates.values.sorted { $0.featureKey < $1.featureKey }, consents: document.consents, tracks: document.trackSnapshots.values.sorted { $0.id.uuidString < $1.id.uuidString })

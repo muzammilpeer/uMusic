@@ -129,7 +129,7 @@ public struct UMusicRootView: View {
         Group {
             switch authenticationModel.state {
             case .authenticated:
-                AppShellView(authentication: client.authentication, library: client.library, playback: client.playback, offline: client.offline, playlists: client.playlists, personalization: client.personalization, context: client.context, calendarPreferences: client.calendarPreferences)
+                AppShellView(authentication: client.authentication, library: client.library, playback: client.playback, offline: client.offline, playlists: client.playlists, personalization: client.personalization, context: client.context, calendarPreferences: client.calendarPreferences, diagnostics: client.diagnostics)
             case .validatingServer, .authenticating:
                 ProgressView("Connecting securely…")
             default:

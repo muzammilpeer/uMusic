@@ -3,6 +3,9 @@ import UMusicCore
 import UMusicOffline
 import UMusicImportClient
 import UMusicPresentation
+#if os(macOS)
+import AppKit
+#endif
 #if os(iOS)
 import UIKit
 
@@ -36,6 +39,12 @@ struct UMusicV2App: App {
                     if phase == .active { Task { await processSharedImports() } }
                 }
         }
+        .commands {
+            UMusicCommandMenus()
+#if os(macOS)
+            InspectorCommands()
+#endif
+        }
     }
 
     private func processSharedImports() async {
@@ -54,3 +63,20 @@ struct UMusicV2App: App {
         }
     }
 }
+
+#if os(macOS)
+private struct InspectorCommands: Commands {
+    var body: some Commands {
+        CommandGroup(after: .importExport) {
+            Button("Open uMusic Data Inspector") {
+                let sibling = Bundle.main.bundleURL.deletingLastPathComponent().appending(path: "UMusicDataInspector.app")
+                let installed = URL(fileURLWithPath: "/Applications/UMusicDataInspector.app")
+                if let target = [sibling, installed].first(where: { FileManager.default.fileExists(atPath: $0.path) }) {
+                    NSWorkspace.shared.openApplication(at: target, configuration: .init())
+                }
+            }
+            .keyboardShortcut("i", modifiers: [.command, .option])
+        }
+    }
+}
+#endif

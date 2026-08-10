@@ -57,8 +57,11 @@ struct Sprint6LibraryScreen: View {
 struct NowScreen: View {
     let playback: (any PlaybackControlling)?
     let snapshot: PlaybackSnapshot
+    let context: (any ContextManaging)?
     @State private var scrubPosition = 0.0
     @State private var isScrubbing = false
+    @State private var showsVisualizer = false
+    @State private var lowEnergyMode = true
 
     var body: some View {
         Group {
@@ -66,7 +69,9 @@ struct NowScreen: View {
                 ScrollView {
                 VStack(spacing: 24) {
                     RoundedRectangle(cornerRadius: 24).fill(.quaternary).aspectRatio(1, contentMode: .fit).overlay { Image(systemName: "music.note").font(.system(size: 72)).foregroundStyle(.secondary) }
-                    VStack { Text(track.title).font(.title2.bold()); Text(track.artist).foregroundStyle(.secondary) }
+                    VStack { Text(track.title).font(.title2.bold()).multilineTextAlignment(.center); Text(track.artist).foregroundStyle(.secondary).multilineTextAlignment(.center) }
+                    Toggle("Visualizer", isOn: $showsVisualizer)
+                    if showsVisualizer { PlaybackVisualizer(snapshot: snapshot, lowEnergyMode: lowEnergyMode, isVisible: true) }
                     Slider(value: $scrubPosition, in: 0...max(track.durationSeconds ?? 1, 1), onEditingChanged: { editing in
                         isScrubbing = editing
                         if !editing { Task { await playback?.seek(to: scrubPosition) } }
@@ -74,10 +79,11 @@ struct NowScreen: View {
                     HStack(spacing: 28) {
                         Button("Back 15", systemImage: "gobackward.15") { Task { await playback?.skip(by: -15) } }.labelStyle(.iconOnly)
                         Button("Previous", systemImage: "backward.fill") { Task { await playback?.previous() } }.labelStyle(.iconOnly).disabled(!snapshot.canGoPrevious)
-                        Button(snapshot.phase == .playing ? "Pause" : "Play", systemImage: snapshot.phase == .playing ? "pause.circle.fill" : "play.circle.fill") { Task { snapshot.phase == .playing ? await playback?.pause() : await playback?.play() } }.labelStyle(.iconOnly).font(.system(size: 54))
+                        Button(snapshot.phase == .playing ? "Pause" : "Play", systemImage: snapshot.phase == .playing ? "pause.circle.fill" : "play.circle.fill") { Task { snapshot.phase == .playing ? await playback?.pause() : await playback?.play() } }.labelStyle(.iconOnly).controlSize(.extraLarge)
                         Button("Next", systemImage: "forward.fill") { Task { await playback?.next() } }.labelStyle(.iconOnly).disabled(!snapshot.canGoNext)
                         Button("Forward 15", systemImage: "goforward.15") { Task { await playback?.skip(by: 15) } }.labelStyle(.iconOnly)
                     }
+                    .accessibilityElement(children: .contain)
                     if let failure = snapshot.failureMessage { Text(failure).foregroundStyle(.red).font(.callout) }
                     if !snapshot.queue.isEmpty {
                         VStack(alignment: .leading, spacing: 8) {
@@ -107,6 +113,11 @@ struct NowScreen: View {
         .navigationTitle("Now")
         .scrollDismissesKeyboard(.interactively)
         .onChange(of: snapshot.positionSeconds) { _, value in if !isScrubbing { scrubPosition = value } }
+        .task {
+            guard let context else { lowEnergyMode = true; return }
+            lowEnergyMode = await context.settings().lowEnergyMode
+            for await settings in context.snapshots { lowEnergyMode = settings.lowEnergyMode }
+        }
     }
 }
 

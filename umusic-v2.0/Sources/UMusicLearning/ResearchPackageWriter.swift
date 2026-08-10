@@ -1,5 +1,6 @@
 import Foundation
 import UMusicDomain
+import UMusicSupport
 
 public struct ResearchExportRecords: Sendable {
     public let events: [EventEnvelope]
@@ -21,6 +22,7 @@ public enum ResearchPackageWriter {
     public static let forbiddenSanitizedTerms = ["password", "token", "server_url", "username", "coordinate", "latitude", "longitude", "file_path", "healthkit_raw", "accessory_identifier"]
 
     public static func write(records: ResearchExportRecords, kind: ResearchExportKind, root: URL = FileManager.default.temporaryDirectory, availableCapacityBytes: Int64? = nil) async throws -> URL {
+        let interval = PerformanceSignposts.begin("ResearchExport"); defer { PerformanceSignposts.end(interval) }
         let manager = FileManager.default
         let exportRoot = root.appending(path: "uMusicResearchExports", directoryHint: .isDirectory)
         try manager.createDirectory(at: exportRoot, withIntermediateDirectories: true, attributes: [.protectionKey: FileProtectionType.complete])
@@ -59,6 +61,14 @@ public enum ResearchPackageWriter {
         let exportRoot = root.appending(path: "uMusicResearchExports", directoryHint: .isDirectory)
         guard let urls = try? FileManager.default.contentsOfDirectory(at: exportRoot, includingPropertiesForKeys: [.contentModificationDateKey]) else { return }
         for url in urls where ((try? url.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate) ?? .distantPast) < date { try? FileManager.default.removeItem(at: url) }
+    }
+
+    public static func discard(_ package: URL, root: URL = FileManager.default.temporaryDirectory) {
+        let exportRoot = root.appending(path: "uMusicResearchExports", directoryHint: .isDirectory).standardizedFileURL
+        let candidate = package.standardizedFileURL
+        guard candidate.deletingLastPathComponent() == exportRoot,
+              candidate.pathExtension == "umusicresearch" else { return }
+        try? FileManager.default.removeItem(at: candidate)
     }
 
     private static func jsonLines<T: Encodable>(_ values: [T], name: String, in package: URL, files: inout [String], counts: inout [String: Int]) async throws {

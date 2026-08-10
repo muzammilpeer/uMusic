@@ -14,6 +14,19 @@ public final class AppNavigationModel {
 
     public init() {}
 
+    public func restorationData() -> Data {
+        (try? JSONEncoder().encode(Restoration(selectedTab: selectedTab, homePath: homePath, libraryPath: libraryPath, nowPath: nowPath, searchPath: searchPath, searchQuery: String(searchQuery.prefix(512))))) ?? Data()
+    }
+
+    public func restore(from data: Data) {
+        guard data.count <= 65_536, let value = try? JSONDecoder().decode(Restoration.self, from: data) else { return }
+        selectedTab = value.selectedTab; homePath = Array(value.homePath.prefix(32)); libraryPath = Array(value.libraryPath.prefix(32)); nowPath = Array(value.nowPath.prefix(32)); searchPath = Array(value.searchPath.prefix(32)); searchQuery = String(value.searchQuery.prefix(512))
+    }
+
+    private struct Restoration: Codable {
+        let selectedTab: AppTab; let homePath: [AppRoute]; let libraryPath: [AppRoute]; let nowPath: [AppRoute]; let searchPath: [AppRoute]; let searchQuery: String
+    }
+
     @discardableResult public func open(_ url: URL) -> Bool {
         guard url.scheme?.lowercased() == "umusic" else { return false }
         let kind = url.host?.lowercased()

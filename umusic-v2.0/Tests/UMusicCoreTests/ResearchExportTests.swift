@@ -41,6 +41,21 @@ func researchExportFailureCleanup() async throws {
     try? FileManager.default.removeItem(at: root)
 }
 
+@Test("Exact export discard cannot delete outside the protected export root")
+func exactExportDiscard() async throws {
+    let root = FileManager.default.temporaryDirectory.appending(path: "discard-\(UUID())")
+    let records = ResearchExportRecords(events: [], sessions: [], observations: [], contexts: [], aggregates: [], featureAggregates: [], consents: [], tracks: [])
+    let package = try await ResearchPackageWriter.write(records: records, kind: .sanitized, root: root)
+    #expect(FileManager.default.fileExists(atPath: package.path))
+    ResearchPackageWriter.discard(package, root: root)
+    #expect(!FileManager.default.fileExists(atPath: package.path))
+    let outside = root.appending(path: "keep.umusicresearch")
+    try FileManager.default.createDirectory(at: outside, withIntermediateDirectories: true)
+    ResearchPackageWriter.discard(outside, root: root)
+    #expect(FileManager.default.fileExists(atPath: outside.path))
+    try? FileManager.default.removeItem(at: root)
+}
+
 @Test("Sanitized manifest carries the denylist and full export requires a fresh preview")
 func researchRedactionAndFullConfirmation() async throws {
     let url = FileManager.default.temporaryDirectory.appending(path: "learning-export-\(UUID()).json")

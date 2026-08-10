@@ -153,6 +153,7 @@ public actor PlaybackCoordinator: PlaybackControlling {
     public func skip(by seconds: Double) async { await seek(to: position + seconds) }
 
     private func prepareCurrent(startingAt startPosition: Double = 0) async {
+        let interval = PerformanceSignposts.begin("PlaybackPrepare"); defer { PerformanceSignposts.end(interval) }
         guard queue.indices.contains(index) else { return }
         let operation = UUID(); preparationID = operation
         isPrepared = false

@@ -21,6 +21,20 @@ func independentNavigationPaths() {
     #expect(model.selectedTab == .library)
 }
 
+@MainActor @Test("Window restoration preserves typed routes and bounds untrusted state")
+func windowRestoration() {
+    let source = AppNavigationModel(), track = UUID(), playlist = UUID()
+    source.selectedTab = .library; source.homePath = [.track(track)]; source.libraryPath = [.playlist(playlist)]; source.searchQuery = String(repeating: "q", count: 700)
+    let restored = AppNavigationModel(); restored.restore(from: source.restorationData())
+    #expect(restored.selectedTab == .library)
+    #expect(restored.homePath == [.track(track)])
+    #expect(restored.libraryPath == [.playlist(playlist)])
+    #expect(restored.searchQuery.count == 512)
+    let unchanged = restored.selectedTab
+    restored.restore(from: Data(repeating: 0, count: 65_537))
+    #expect(restored.selectedTab == unchanged)
+}
+
 @Test("The shell exposes exactly the four planned primary tabs")
 func primaryTabsAreStable() {
     #expect(AppTab.allCases == [.home, .library, .now, .search])
@@ -86,6 +100,24 @@ func homeReduceMotionContract() {
     #expect(HomeMotionPolicy.animation(reduceMotion: false) != nil)
 }
 
+@Test("Visualizer throttles for energy and stops for accessibility or background")
+func visualizerPolicyContract() {
+    #expect(VisualizerPolicy.framesPerSecond(isPlaying: true, isVisible: true, sceneActive: true, reduceMotion: false, lowEnergyMode: false) == 15)
+    #expect(VisualizerPolicy.framesPerSecond(isPlaying: true, isVisible: true, sceneActive: true, reduceMotion: false, lowEnergyMode: true) == 4)
+    #expect(VisualizerPolicy.framesPerSecond(isPlaying: true, isVisible: true, sceneActive: true, reduceMotion: true, lowEnergyMode: false) == 0)
+    #expect(VisualizerPolicy.framesPerSecond(isPlaying: true, isVisible: true, sceneActive: false, reduceMotion: false, lowEnergyMode: false) == 0)
+    #expect(VisualizerPolicy.bars(position: 2).allSatisfy { (0.1...0.9).contains($0) })
+}
+
+@Test("Visualizer never captures microphone or installs an audio engine")
+func visualizerSourceIsolation() throws {
+    let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+    let source = try String(contentsOf: root.appending(path: "Sources/UMusicPresentation/VisualizerView.swift"), encoding: .utf8)
+    #expect(!source.contains("AVAudioEngine"))
+    #expect(!source.contains("AVAudioRecorder"))
+    #expect(!source.localizedCaseInsensitiveContains("microphone"))
+}
+
 @Test("Home mix construction stays bounded for a large cached library")
 func homeMixPerformance() {
     let tracks = (0..<25_000).map { index in
@@ -117,4 +149,24 @@ func contextUISourceContract() throws {
     #expect(shell.contains("#if os(iOS)"))
     #expect(!shell.localizedCaseInsensitiveContains("airpods battery"))
     #expect(!shell.contains("Timer.publish"))
+}
+
+@Test("Adaptive shell provides sidebar, restoration, keyboard focus, and semantic layout")
+func adaptiveShellSourceContract() throws {
+    let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+    let shell = try String(contentsOf: root.appending(path: "Sources/UMusicPresentation/AppShellView.swift"), encoding: .utf8)
+    let commands = try String(contentsOf: root.appending(path: "Sources/UMusicPresentation/AdaptiveCommands.swift"), encoding: .utf8)
+    #expect(shell.contains("NavigationSplitView"))
+    #expect(shell.contains("@SceneStorage"))
+    #expect(shell.contains("horizontalSizeClass == .regular"))
+    #expect(shell.contains("focusedSceneValue"))
+    #expect(commands.contains("keyboardShortcut"))
+    #expect(!shell.contains("layoutDirection =="))
+}
+
+@Test("macOS does not invent an audio route")
+func macAudioRouteSourceContract() throws {
+    let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+    let source = try String(contentsOf: root.appending(path: "Sources/UMusicContext/SystemPassiveContextProviders.swift"), encoding: .utf8)
+    #expect(source.contains("#else\n        return .unknown"))
 }

@@ -103,6 +103,7 @@ public actor PlaceholderPersonalizationManager: PersonalizationManaging {
     public func previewFullResearchExport() async -> ResearchExportPreview { .init(eventCount: 0, observationCount: 0, includesTrackMetadata: true, sensitiveCategories: [], expiresAt: Date().addingTimeInterval(300)) }
     public func exportResearch(_ kind: ResearchExportKind, confirmationID: UUID?) async throws -> URL { FileManager.default.temporaryDirectory.appending(path: "umusic-empty-export.umusicresearch") }
     public func cleanupResearchExports() async {}
+    public func discardResearchExport(at url: URL) async {}
     public func resetLearning() async throws {}
 }
 

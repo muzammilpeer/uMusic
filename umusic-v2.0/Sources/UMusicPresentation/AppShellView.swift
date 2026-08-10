@@ -9,6 +9,7 @@ public struct AppShellView: View {
     @State private var showsLearning = false
     @State private var showsActivity = false
     @State private var showsCalendarPreferences = false
+    @State private var showsDiagnostics = false
     @AppStorage(UMusicTheme.themeDefaultsKey) private var themeRawValue = UMusicThemePreference.system.rawValue
     @AppStorage(UMusicTheme.accentDefaultsKey) private var accentRawValue = UMusicAccent.violet.rawValue
     private let authentication: (any AuthenticationManaging)?
@@ -19,9 +20,13 @@ public struct AppShellView: View {
     private let personalization: (any PersonalizationManaging)?
     private let context: (any ContextManaging)?
     private let calendarPreferences: (any CalendarPreferenceManaging)?
+    private let diagnostics: (any DiagnosticsProviding)?
     @State private var playbackSnapshot = PlaybackSnapshot.idle
+    @State private var searchPresented = false
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    @SceneStorage("umusic.v2.navigation") private var restoredNavigation = Data()
 
-    public init(authentication: (any AuthenticationManaging)? = nil, library: (any LibraryProviding)? = nil, playback: (any PlaybackControlling)? = nil, offline: (any OfflineManaging)? = nil, playlists: (any PlaylistManaging)? = nil, personalization: (any PersonalizationManaging)? = nil, context: (any ContextManaging)? = nil, calendarPreferences: (any CalendarPreferenceManaging)? = nil) {
+    public init(authentication: (any AuthenticationManaging)? = nil, library: (any LibraryProviding)? = nil, playback: (any PlaybackControlling)? = nil, offline: (any OfflineManaging)? = nil, playlists: (any PlaylistManaging)? = nil, personalization: (any PersonalizationManaging)? = nil, context: (any ContextManaging)? = nil, calendarPreferences: (any CalendarPreferenceManaging)? = nil, diagnostics: (any DiagnosticsProviding)? = nil) {
         self.authentication = authentication
         self.library = library
         self.playback = playback
@@ -30,25 +35,12 @@ public struct AppShellView: View {
         self.personalization = personalization
         self.context = context
         self.calendarPreferences = calendarPreferences
+        self.diagnostics = diagnostics
     }
 
     public var body: some View {
-        TabView(selection: $navigation.selectedTab) {
-            tabNavigation(path: $navigation.homePath) { HomeScreen(library: library, playback: playback, offline: offline, personalization: personalization, calendarPreferences: calendarPreferences, playbackSnapshot: playbackSnapshot) }
-                .tabItem { Label("Home", systemImage: "house") }
-                .tag(AppTab.home)
-
-            tabNavigation(path: $navigation.libraryPath) { LibraryScreen(library: library, playback: playback, offline: offline, playlists: playlists) }
-                .tabItem { Label("Library", systemImage: "music.note.list") }
-                .tag(AppTab.library)
-
-            tabNavigation(path: $navigation.nowPath) { NowScreen(playback: playback, snapshot: playbackSnapshot) }
-                .tabItem { Label("Now", systemImage: "play.circle") }
-                .tag(AppTab.now)
-
-            tabNavigation(path: $navigation.searchPath) { SearchScreen(query: $navigation.searchQuery, library: library, playback: playback, offline: offline, playlists: playlists) }
-                .tabItem { Label("Search", systemImage: "magnifyingglass") }
-                .tag(AppTab.search)
+        Group {
+            if usesSidebar { adaptiveSplitView } else { compactTabView }
         }
         .tint(selectedAccent.color)
         .preferredColorScheme(selectedTheme.colorScheme)
@@ -58,49 +50,87 @@ public struct AppShellView: View {
             }
         }
         .task {
+            navigation.restore(from: restoredNavigation)
             guard let playback else { return }
             for await value in playback.snapshots { playbackSnapshot = value }
         }
-        .onOpenURL { _ = navigation.open($0) }
+        .onChange(of: navigation.selectedTab) { _, _ in saveNavigation() }
+        .onChange(of: navigation.searchQuery) { _, _ in saveNavigation() }
+        .onChange(of: navigation.homePath) { _, _ in saveNavigation() }
+        .onChange(of: navigation.libraryPath) { _, _ in saveNavigation() }
+        .onChange(of: navigation.nowPath) { _, _ in saveNavigation() }
+        .onChange(of: navigation.searchPath) { _, _ in saveNavigation() }
+        .onOpenURL { if navigation.open($0), navigation.selectedTab == .search { searchPresented = true } }
+        .focusedSceneValue(\.uMusicCommands, UMusicCommandActions(selectTab: { tab in navigation.selectedTab = tab; if tab == .search { searchPresented = true } }, togglePlayback: {
+            guard let playback else { return }
+            Task { playbackSnapshot.phase == .playing ? await playback.pause() : await playback.play() }
+        }))
         .toolbar {
             Button("Appearance", systemImage: "paintpalette") { showsAppearance = true }
-            if personalization != nil {
-                Button("Learning & Privacy", systemImage: "brain.head.profile") { showsLearning = true }
-            }
-            if context != nil {
-                Button("Activity & Context", systemImage: "figure.walk") { showsActivity = true }
-            }
-            if calendarPreferences != nil, playlists != nil {
-                Button("Calendar & Smart Playlists", systemImage: "calendar") { showsCalendarPreferences = true }
-            }
-            if offline != nil {
-                Button("Offline Storage", systemImage: "arrow.down.circle") { showsOffline = true }
-            }
-            if authentication != nil {
-                Button("Account", systemImage: "person.crop.circle") { showsAccount = true }
-            }
+            if personalization != nil { Button("Learning & Privacy", systemImage: "brain.head.profile") { showsLearning = true } }
+            if context != nil { Button("Activity & Context", systemImage: "figure.walk") { showsActivity = true } }
+            if calendarPreferences != nil, playlists != nil { Button("Calendar & Smart Playlists", systemImage: "calendar") { showsCalendarPreferences = true } }
+            if offline != nil { Button("Offline Storage", systemImage: "arrow.down.circle") { showsOffline = true } }
+            if authentication != nil { Button("Account", systemImage: "person.crop.circle") { showsAccount = true } }
+            if diagnostics != nil { Button("Diagnostics", systemImage: "stethoscope") { showsDiagnostics = true } }
         }
-        .sheet(isPresented: $showsAccount) {
-            if let authentication {
-                AccountSessionView(authentication: authentication)
-            }
-        }
-        .sheet(isPresented: $showsOffline) {
-            if let offline { OfflineSettingsView(offline: offline) }
-        }
-        .sheet(isPresented: $showsAppearance) {
-            AppearanceSettingsView(themeRawValue: $themeRawValue, accentRawValue: $accentRawValue)
-        }
-        .sheet(isPresented: $showsLearning) {
-            if let personalization { LearningPrivacyView(personalization: personalization) }
-        }
-        .sheet(isPresented: $showsActivity) {
-            if let context { ActivityContextView(context: context) }
-        }
-        .sheet(isPresented: $showsCalendarPreferences) {
-            if let calendarPreferences, let playlists { CalendarPreferenceView(preferences: calendarPreferences, playlists: playlists) }
+        .sheet(isPresented: $showsAccount) { if let authentication { AccountSessionView(authentication: authentication) } }
+        .sheet(isPresented: $showsOffline) { if let offline { OfflineSettingsView(offline: offline) } }
+        .sheet(isPresented: $showsAppearance) { AppearanceSettingsView(themeRawValue: $themeRawValue, accentRawValue: $accentRawValue) }
+        .sheet(isPresented: $showsLearning) { if let personalization { LearningPrivacyView(personalization: personalization) } }
+        .sheet(isPresented: $showsActivity) { if let context { ActivityContextView(context: context) } }
+        .sheet(isPresented: $showsCalendarPreferences) { if let calendarPreferences, let playlists { CalendarPreferenceView(preferences: calendarPreferences, playlists: playlists) } }
+        .sheet(isPresented: $showsDiagnostics) { if let diagnostics { DiagnosticsView(provider: diagnostics) } }
+    }
+
+    private var compactTabView: some View {
+        TabView(selection: $navigation.selectedTab) {
+            tabNavigation(path: $navigation.homePath) { HomeScreen(library: library, playback: playback, offline: offline, personalization: personalization, calendarPreferences: calendarPreferences, playbackSnapshot: playbackSnapshot) }
+                .tabItem { Label("Home", systemImage: "house") }
+                .tag(AppTab.home)
+
+            tabNavigation(path: $navigation.libraryPath) { LibraryScreen(library: library, playback: playback, offline: offline, playlists: playlists) }
+                .tabItem { Label("Library", systemImage: "music.note.list") }
+                .tag(AppTab.library)
+
+            tabNavigation(path: $navigation.nowPath) { NowScreen(playback: playback, snapshot: playbackSnapshot, context: context) }
+                .tabItem { Label("Now", systemImage: "play.circle") }
+                .tag(AppTab.now)
+
+            tabNavigation(path: $navigation.searchPath) { SearchScreen(query: $navigation.searchQuery, searchPresented: $searchPresented, library: library, playback: playback, offline: offline, playlists: playlists) }
+                .tabItem { Label("Search", systemImage: "magnifyingglass") }
+                .tag(AppTab.search)
         }
     }
+
+    private var adaptiveSplitView: some View {
+        NavigationSplitView {
+            List(AppTab.allCases, id: \.self, selection: Binding(get: { navigation.selectedTab }, set: { navigation.selectedTab = $0 ?? .home })) { tab in
+                Label(tab.title, systemImage: tab.systemImage).tag(tab)
+            }
+            .navigationTitle("uMusic")
+        } detail: { selectedDestination }
+        .navigationSplitViewStyle(.balanced)
+    }
+
+    @ViewBuilder private var selectedDestination: some View {
+        switch navigation.selectedTab {
+        case .home: tabNavigation(path: $navigation.homePath) { HomeScreen(library: library, playback: playback, offline: offline, personalization: personalization, calendarPreferences: calendarPreferences, playbackSnapshot: playbackSnapshot) }
+        case .library: tabNavigation(path: $navigation.libraryPath) { LibraryScreen(library: library, playback: playback, offline: offline, playlists: playlists) }
+        case .now: tabNavigation(path: $navigation.nowPath) { NowScreen(playback: playback, snapshot: playbackSnapshot, context: context) }
+        case .search: tabNavigation(path: $navigation.searchPath) { SearchScreen(query: $navigation.searchQuery, searchPresented: $searchPresented, library: library, playback: playback, offline: offline, playlists: playlists) }
+        }
+    }
+
+    private var usesSidebar: Bool {
+#if os(macOS)
+        true
+#else
+        horizontalSizeClass == .regular
+#endif
+    }
+
+    private func saveNavigation() { restoredNavigation = navigation.restorationData() }
 
     private var selectedTheme: UMusicThemePreference { UMusicThemePreference(rawValue: themeRawValue) ?? .system }
     private var selectedAccent: UMusicAccent { UMusicAccent(rawValue: accentRawValue) ?? .violet }
@@ -194,6 +224,9 @@ private struct LearningPrivacyView: View {
     @State private var confirmsReset = false
     @State private var fullPreview: ResearchExportPreview?
     @State private var confirmsFullExport = false
+    @State private var preparedExportKind: ResearchExportKind?
+    @State private var preparedFullPreview: ResearchExportPreview?
+    @State private var showsExportReview = false
     @State private var errorMessage: String?
     @Environment(\.dismiss) private var dismiss
 
@@ -221,7 +254,7 @@ private struct LearningPrivacyView: View {
                 Section("Export") {
                     Button("Prepare Sanitized Export", systemImage: "square.and.arrow.up") { Task { await prepareExport() } }
                     Button("Preview Full Research Export", systemImage: "doc.badge.gearshape") { Task { await previewFullExport() } }
-                    if let exportURL { ShareLink(item: exportURL) { Label("Share Export", systemImage: "paperplane") } }
+                    if exportURL != nil { Button("Review & Share Export", systemImage: "paperplane") { showsExportReview = true } }
                     Text("Sanitized packages exclude credentials, server details, usernames, file paths, coordinates, raw HealthKit values, and accessory identifiers. Full packages remain local until you explicitly share them.")
                         .font(.caption).foregroundStyle(.secondary)
                 }
@@ -248,6 +281,12 @@ private struct LearningPrivacyView: View {
                 Text("Includes \(fullPreview?.eventCount ?? 0) events, \(fullPreview?.observationCount ?? 0) observations, track titles/artists, the complete listening timeline, and coarse activity/context. It remains local until shared.")
             }
             .alert("Learning Data Error", isPresented: Binding(get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } })) { Button("OK") { errorMessage = nil } } message: { Text(errorMessage ?? "") }
+            .sheet(isPresented: $showsExportReview, onDismiss: { Task { await discardPreparedExport() } }) {
+                if let exportURL, let preparedExportKind {
+                    ExportReviewView(url: exportURL, kind: preparedExportKind, preview: preparedFullPreview) { showsExportReview = false }
+                }
+            }
+            .onDisappear { Task { await discardPreparedExport() } }
         }
     }
 
@@ -255,9 +294,35 @@ private struct LearningPrivacyView: View {
     private func setRetention(_ value: RawHistoryRetention) async { do { try await personalization.setRawHistoryRetention(value); await reload() } catch { errorMessage = "The retention setting could not be saved." } }
     private func deleteHistory() async { do { try await personalization.deleteHistory(); await reload() } catch { errorMessage = "Listening history could not be deleted." } }
     private func resetLearning() async { do { try await personalization.resetLearning(); await reload() } catch { errorMessage = "Learning data could not be reset." } }
-    private func prepareExport() async { do { exportURL = try await personalization.exportResearch(.sanitized, confirmationID: nil) } catch { errorMessage = "The sanitized export could not be prepared." } }
+    private func prepareExport() async { do { await discardPreparedExport(); exportURL = try await personalization.exportResearch(.sanitized, confirmationID: nil); preparedExportKind = .sanitized } catch { errorMessage = "The sanitized export could not be prepared." } }
     private func previewFullExport() async { fullPreview = await personalization.previewFullResearchExport(); confirmsFullExport = true }
-    private func prepareFullExport() async { do { exportURL = try await personalization.exportResearch(.full, confirmationID: fullPreview?.confirmationID); fullPreview = nil } catch { errorMessage = "The full export preview expired or the package could not be prepared." } }
+    private func prepareFullExport() async { do { await discardPreparedExport(); let preview = fullPreview; exportURL = try await personalization.exportResearch(.full, confirmationID: preview?.confirmationID); preparedExportKind = .full; preparedFullPreview = preview; fullPreview = nil } catch { errorMessage = "The full export preview expired or the package could not be prepared." } }
+    private func discardPreparedExport() async { if let exportURL { await personalization.discardResearchExport(at: exportURL) }; exportURL = nil; preparedExportKind = nil; preparedFullPreview = nil }
+}
+
+private struct ExportReviewView: View {
+    let url: URL
+    let kind: ResearchExportKind
+    let preview: ResearchExportPreview?
+    let done: () -> Void
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section(kind == .full ? "Sensitive Full Export" : "Sanitized Export") {
+                    if kind == .full {
+                        Text("Includes \(preview?.eventCount ?? 0) events, \(preview?.observationCount ?? 0) observations, track titles/artists, complete listening timeline, and coarse activity/context.")
+                            .foregroundStyle(.orange)
+                    } else {
+                        Text("Credentials, server details, usernames, paths, coordinates, raw Health data, and accessory identifiers are excluded.")
+                    }
+                }
+                ShareLink(item: url) { Label(kind == .full ? "Share Sensitive Full Export" : "Share Sanitized Export", systemImage: "square.and.arrow.up") }
+                Text("The temporary package is deleted when this review closes, whether sharing completes or is cancelled.").font(.caption).foregroundStyle(.secondary)
+            }
+            .navigationTitle("Review Export")
+            .toolbar { Button("Done") { done() } }
+        }
+    }
 }
 
 private struct AppearanceSettingsView: View {

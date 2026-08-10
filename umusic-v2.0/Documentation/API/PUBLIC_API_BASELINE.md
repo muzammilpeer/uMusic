@@ -1,8 +1,8 @@
 # UMusicCore Public API Baseline
 
-Version: `2.0.0-alpha.2`
+Version: `2.0.0-alpha.19` (Beta 1 freeze candidate)
 
-The Sprint 1 compatibility surface consists of:
+The compatibility surface began in Sprint 1 and is frozen for Beta 1 after Sprint 19 validation. It consists of:
 
 - `UMusicClient`, authentication, and six media/library capability protocols.
 - Immutable Sendable snapshots and track/playlist value summaries.
