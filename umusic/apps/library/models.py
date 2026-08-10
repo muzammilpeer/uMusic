@@ -105,6 +105,7 @@ class Track(models.Model):
     year = models.PositiveSmallIntegerField(null=True, blank=True)
     genres = models.JSONField(default=list, blank=True)
     energy = models.DecimalField(max_digits=3, decimal_places=2, null=True, blank=True)
+    content_classifications = models.JSONField(default=list, blank=True)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

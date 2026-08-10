@@ -85,6 +85,10 @@ ignore_missing_imports = true
 module = [
   "umusic.apps.accounts.api",
   "umusic.apps.accounts.authentication",
+  "umusic.apps.accounts.v2_api",
+  "umusic.apps.library.v2_api",
+  "umusic.apps.playback.v2_api",
+  "umusic.apps.accounts.tests.test_v2_auth_api",
   "umusic.apps.accounts.permissions",
   "umusic.apps.imports.serializers",
   "umusic.apps.imports.views",

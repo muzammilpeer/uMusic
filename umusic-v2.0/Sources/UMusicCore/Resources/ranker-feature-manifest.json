@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "featureVersion": "ranker-features-1",
+  "modelVersion": "uninstalled",
+  "orderedFeatures": [
+    "heuristic_score",
+    "completion_rate",
+    "skip_rate",
+    "exposure_log",
+    "offline",
+    "local_hour_sin",
+    "local_hour_cos",
+    "release_year_scaled"
+  ],
+  "minimumOSMajorVersion": 14,
+  "maximumBatchSize": 200,
+  "timeoutMilliseconds": 50,
+  "modelSHA256": "",
+  "signature": "",
+  "publicKeyID": ""
+}

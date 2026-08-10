@@ -1,4 +1,5 @@
 import base64
+import uuid
 from pathlib import Path
 from typing import Any
 
@@ -238,3 +239,30 @@ def test_remote_batch_rejects_private_targets_and_requires_youtube_attestation(
     )
     with pytest.raises(PermissionError, match="attestation"):
         create_remote_import(owner, "https://youtu.be/public-video", attested=False)
+
+
+@pytest.mark.django_db
+def test_remote_import_idempotency_creates_and_dispatches_exactly_once(
+    settings: Any, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    settings.UMUSIC_REMOTE_IMPORT_ENABLED = True
+    settings.UMUSIC_REMOTE_IMPORT_MAX_ITEMS = 5
+    monkeypatch.setattr(
+        "umusic.apps.imports.remote_services.socket.getaddrinfo",
+        lambda *args, **kwargs: [(2, 1, 6, "", ("8.8.8.8", 443))],
+    )
+    dispatched: list[str] = []
+    monkeypatch.setattr(
+        "umusic.apps.imports.tasks.process_remote_import.delay", dispatched.append
+    )
+    owner = User.objects.create_user(username="idempotent-owner")
+    key = uuid.uuid4()
+    first = create_remote_import(
+        owner, "https://music.example/song.mp3", attested=True, idempotency_key=key
+    )
+    second = create_remote_import(
+        owner, "https://music.example/song.mp3", attested=True, idempotency_key=key
+    )
+    assert first.id == second.id
+    assert AdapterJob.objects.filter(owner=owner, idempotency_key=key).count() == 1
+    assert dispatched == [str(first.id)]

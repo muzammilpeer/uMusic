@@ -13,6 +13,8 @@ The server is an authenticated catalog and media service, not the personal recom
 
 ## Authentication
 
+`GET /api/v2/bootstrap` is reachable before session creation and returns only non-sensitive server compatibility metadata. It does not return catalog rows or user data.
+
 ### `POST /api/v2/auth/session`
 
 ```json
@@ -34,6 +36,14 @@ The server is an authenticated catalog and media service, not the personal recom
 ```
 
 Keep Me Signed In controls Keychain persistence; it is not sent as server policy.
+
+### `POST /api/v2/auth/session/refresh`
+
+```json
+{"refresh_token": "opaque"}
+```
+
+Returns the same session response shape with rotated access and refresh tokens. A `401` expires the local session; a `403` marks it revoked. The client clears persisted tokens in both cases.
 
 ## Bootstrap
 
@@ -58,7 +68,7 @@ Returns server identity, API/schema versions, user-safe capabilities, library re
     "artists": [{"id": "uuid", "name": "Artist"}],
     "album": {"id": "uuid", "title": "Album", "album_artist": "Artist"},
     "genres": ["genre-id"],
-    "language": {"code": "ur", "confidence": 0.96},
+    "language": "ur",
     "release_date": "1998-01-01",
     "release_year": 1998,
     "duration_ms": 214000,
@@ -66,6 +76,9 @@ Returns server identity, API/schema versions, user-safe capabilities, library re
     "disc_number": 1,
     "explicit": false,
     "content_tags": ["religious", "spoken_translation"],
+    "content_classifications": [
+      {"category": "quranTranslation", "confidence": 0.94}
+    ],
     "audio_analysis": {
       "version": "analysis-2",
       "bpm": 92.3,
@@ -83,11 +96,37 @@ Returns server identity, API/schema versions, user-safe capabilities, library re
 }
 ```
 
-The client commits a page before advancing its local cursor. Full resync uses a new staging store then swaps only after validation.
+`content_classifications` is optional, explicit server metadata. Supported Sprint 12
+categories are `quran`, `quranTranslation`, and `religious`; confidence is clamped to
+`0...1`. Missing, unknown, or low-confidence classifications do not match smart
+playlist rules. The client never derives these categories from language, identity,
+location, or listening behavior.
+
+The signed cursor is opaque and represents either a fixed pagination snapshot or the next sync boundary. Clients must not inspect or edit it. The client commits each page and its cursor in one local transaction before requesting the next page. A completed response still returns a cursor for the next explicit sync. Full resync uses a new staging store then swaps only after validation.
 
 ## Media
 
-- `POST /api/v2/media/playback-tickets` with track IDs returns expiring stream/download URLs, checksum, byte length, range support, and expiry.
+### `POST /api/v2/media/playback-tickets`
+
+```json
+{"track_ids": ["uuid"]}
+```
+
+```json
+{
+  "tickets": [{
+    "track_id": "uuid",
+    "url": "https://server/api/v2/media/tracks/uuid/stream?ticket=opaque",
+    "expires_at": "2026-08-09T10:05:00Z",
+    "checksum": "sha256",
+    "bytes": 6543210,
+    "supports_ranges": true
+  }]
+}
+```
+
+Tickets expire after five minutes, are restricted to the authenticated user and requested track, and can be passed directly to the system media player without exposing a bearer token. Ticket streams support HTTP byte ranges.
+
 - `GET /api/v2/artwork/{id}` supports ETag and size variants.
 - Client verifies media identity/checksum before marking offline-ready.
 
@@ -102,16 +141,25 @@ Personal smart rules and learned auto-growth remain device-local unless a later 
 
 ## Remote import
 
-### `POST /api/v2/import-jobs`
+### `POST /api/v1/adapters/remote/` (Sprint 15 compatibility endpoint)
 
 ```json
 {
-  "source_urls": ["https://example.invalid/watch/..."],
-  "requested_metadata_policy": "extract_and_validate"
+  "url": "https://example.invalid/audio.mp3",
+  "idempotency_key": "uuid",
+  "attested": true
 }
 ```
 
-Returns `202` with `job_id`, state, and status URL. The extension never sends device telemetry with the URL. The server validates source policy, retrieves media, normalizes MP3/ID3, analyzes metadata, and exposes progress/failure codes.
+Returns `202` for a new job and the existing job with `200` when the same authenticated
+owner repeats an idempotency key. Status is available from
+`GET /api/v1/adapters/jobs/{job_id}/`. The request contains no device telemetry,
+context, credentials, playlist, or listening information. The server validates public
+HTTPS targets and every redirect, applies provider/authorization policy, retrieves
+media asynchronously, normalizes MP3/ID3, and returns stable availability errors.
+
+The future `/api/v2/import-jobs` shape may be additive, but must preserve owner-scoped
+idempotency and the privacy boundary above.
 
 ## Device telemetry
 

@@ -1,3 +1,5 @@
+import uuid
+
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -114,13 +116,27 @@ class RemoteImportView(APIView):
         owner = request.user
         assert isinstance(owner, User)
         try:
+            raw_key = request.data.get("idempotency_key")
+            if not raw_key:
+                return Response(
+                    {"error": {"code": "IDEMPOTENCY_KEY_REQUIRED", "message": "An idempotency key is required."}},
+                    status=400,
+                )
+            idempotency_key = uuid.UUID(str(raw_key))
+            existing = AdapterJob.objects.filter(
+                owner=owner, idempotency_key=idempotency_key
+            ).first()
+            if existing is not None:
+                return Response(_job(existing), status=200)
             job = create_remote_import(
                 owner,
-                str(request.data.get("urls", "")),
+                str(request.data.get("url") or request.data.get("urls", "")),
                 request.data.get("attested") is True,
+                idempotency_key,
             )
         except (ValueError, PermissionError) as error:
-            return Response({"error": str(error)}, status=400)
+            code = "PROVIDER_UNAVAILABLE" if isinstance(error, PermissionError) else "INVALID_IMPORT_URL"
+            return Response({"error": {"code": code, "message": str(error)}}, status=400)
         return Response(_job(job), status=202)
 
 

@@ -1,0 +1,23 @@
+name: uMusic v2
+
+on:
+  pull_request:
+    paths:
+      - "umusic-v2.0/**"
+      - ".github/workflows/umusic-v2.yml"
+  push:
+    paths:
+      - "umusic-v2.0/**"
+      - ".github/workflows/umusic-v2.yml"
+
+jobs:
+  swift-tests:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test v2 package
+        run: swift test --package-path umusic-v2.0
+      - name: Validate architecture boundaries
+        run: sh umusic-v2.0/Scripts/validate-architecture.sh
+      - name: Check public API baseline
+        run: sh umusic-v2.0/Scripts/check-public-api.sh

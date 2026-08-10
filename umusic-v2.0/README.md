@@ -1,11 +1,13 @@
 # uMusic 2.0 — Ground-Up Product Plan
 
-Status: planning baseline  
+Status: Sprint 2 authentication implementation
 Platforms: iPhone first; iPad and macOS compatible  
 UI: SwiftUI  
 Core delivery: `UMusicCore.xcframework` plus a thin `UMusicApp` integration target
 
 uMusic 2.0 is a private, self-hosted, offline-first music experience built around one primary action: **Start Listening**. The server supplies authenticated library, playlist, artwork, and audio data. The Apple client owns playback, observation, privacy controls, local learning, prediction, queue construction, offline storage, and restoration.
+
+Development status: Sprint 2 authentication and onboarding are implemented on the Sprint 1 architecture. XCFramework packaging, signed-host integration, and live `/api/v2` server validation remain open. See [Documentation/Sprints/Sprint-2/REPORT.md](Documentation/Sprints/Sprint-2/REPORT.md).
 
 This folder is deliberately independent of the existing application. It is a specification, not an instruction to migrate or delete v1 code.
 
@@ -23,6 +25,7 @@ This folder is deliberately independent of the existing application. It is a spe
 - [Documentation/THREAT_AND_PRIVACY_MODEL.md](Documentation/THREAT_AND_PRIVACY_MODEL.md) — assets, threats, controls, and privacy defaults
 - [Documentation/PROTOTYPE_PLAN.md](Documentation/PROTOTYPE_PLAN.md) — disposable feasibility spikes and thresholds
 - [Documentation/REQUIREMENTS_TRACEABILITY.md](Documentation/REQUIREMENTS_TRACEABILITY.md) — requirement-to-sprint evidence map
+- [Documentation/FRAMEWORK_INTEGRATION.md](Documentation/FRAMEWORK_INTEGRATION.md) — package products and remaining XCFramework integration gate
 
 ## Product principles
 

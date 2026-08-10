@@ -5,6 +5,7 @@ import re
 import socket
 import subprocess
 import tempfile
+import uuid
 from io import StringIO
 from pathlib import Path
 from typing import Any, cast, no_type_check
@@ -12,6 +13,7 @@ from urllib.parse import urlparse
 from urllib.request import HTTPRedirectHandler, Request, build_opener
 
 from django.conf import settings
+from django.db import IntegrityError, transaction
 from django.utils import timezone
 from mutagen.id3 import (  # type: ignore[attr-defined]
     COMM,
@@ -65,9 +67,17 @@ def _validate_public_https(url: str) -> tuple[str, str]:
     return parsed.hostname.lower(), parsed.path
 
 
-def create_remote_import(owner: User, value: str, attested: bool) -> AdapterJob:
+def create_remote_import(
+    owner: User, value: str, attested: bool, idempotency_key: uuid.UUID | None = None
+) -> AdapterJob:
     if not settings.UMUSIC_REMOTE_IMPORT_ENABLED:
         raise PermissionError("Remote import is disabled")
+    if idempotency_key is not None:
+        existing = AdapterJob.objects.filter(
+            owner=owner, idempotency_key=idempotency_key
+        ).first()
+        if existing is not None:
+            return existing
     urls = parse_remote_urls(value)
     classified: list[tuple[str, str, str]] = []
     for url in urls:
@@ -85,14 +95,30 @@ def create_remote_import(owner: User, value: str, attested: bool) -> AdapterJob:
         elif not path.lower().endswith(".mp3"):
             raise ValueError("Direct URLs must end with .mp3")
         classified.append((url, host, kind))
-    job = AdapterJob.objects.create(
-        owner=owner,
-        adapter=AdapterJob.Adapter.REMOTE,
-        status=AdapterJob.Status.PENDING,
-        operator_attested=attested,
-        request={"item_count": len(classified)},
-        provenance={"source_hosts": sorted({host for _, host, _ in classified})},
-    )
+    attributes = {
+        "status": AdapterJob.Status.PENDING,
+        "operator_attested": attested,
+        "request": {"item_count": len(classified)},
+        "provenance": {"source_hosts": sorted({host for _, host, _ in classified})},
+    }
+    if idempotency_key is None:
+        job = AdapterJob.objects.create(
+            owner=owner, adapter=AdapterJob.Adapter.REMOTE, **attributes
+        )
+    else:
+        try:
+            with transaction.atomic():
+                job, created = AdapterJob.objects.get_or_create(
+                    owner=owner,
+                    adapter=AdapterJob.Adapter.REMOTE,
+                    idempotency_key=idempotency_key,
+                    defaults=attributes,
+                )
+        except IntegrityError:
+            job = AdapterJob.objects.get(owner=owner, idempotency_key=idempotency_key)
+            created = False
+        if not created:
+            return job
     RemoteImportItem.objects.bulk_create(
         [
             RemoteImportItem(

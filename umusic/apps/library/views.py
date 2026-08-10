@@ -85,6 +85,19 @@ def track_detail(request: HttpRequest, track_id: Any) -> HttpResponse:
         "track_number": track.track_number,
         "disc_number": track.disc_number,
         "genres": ", ".join(track.genres),
+        "content_categories": [
+            item.get("category")
+            for item in track.content_classifications
+            if isinstance(item, dict)
+        ],
+        "content_confidence": next(
+            (
+                item.get("confidence")
+                for item in track.content_classifications
+                if isinstance(item, dict)
+            ),
+            1,
+        ),
     }
     form = TrackMetadataForm(request.POST or None, initial=initial)
     if request.method == "POST" and form.is_valid():
@@ -95,6 +108,12 @@ def track_detail(request: HttpRequest, track_id: Any) -> HttpResponse:
                     "This catalog file is shared by another library and cannot be edited here.",
                 )
             update_track_metadata(track, user, form.cleaned_data)
+            confidence = float(form.cleaned_data.get("content_confidence") or 0)
+            track.content_classifications = [
+                {"category": category, "confidence": confidence}
+                for category in form.cleaned_data.get("content_categories", [])
+            ]
+            track.save(update_fields=["content_classifications", "updated_at"])
             messages.success(request, "MP3 tags, library metadata, checksum, and filename updated.")
             return redirect("library:track-detail", track_id=track.id)
         except ImportFailure as error:

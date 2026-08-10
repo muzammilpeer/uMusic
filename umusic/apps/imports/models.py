@@ -25,6 +25,7 @@ class AdapterJob(models.Model):
     adapter = models.CharField(max_length=20, choices=Adapter.choices)
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING)
     request = models.JSONField(default=dict)
+    idempotency_key = models.UUIDField(null=True, blank=True)
     provenance = models.JSONField(default=dict)
     operator_attested = models.BooleanField(default=False)
     imported_count = models.PositiveIntegerField(default=0)
@@ -34,6 +35,13 @@ class AdapterJob(models.Model):
 
     class Meta:
         ordering = ["-created_at"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["owner", "idempotency_key"],
+                condition=models.Q(idempotency_key__isnull=False),
+                name="import_job_owner_idempotency_key",
+            )
+        ]
 
     def __str__(self) -> str:
         return f"{self.adapter}: {self.status}"

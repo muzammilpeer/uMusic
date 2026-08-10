@@ -15,6 +15,7 @@ class RequestLogMiddleware:
 
     def __call__(self, request: HttpRequest) -> HttpResponse:
         request_id = request.headers.get("X-Request-ID", str(uuid.uuid4()))[:100]
+        request.request_id = request_id
         started = time.perf_counter()
         response = self.get_response(request)
         response["X-Request-ID"] = request_id

@@ -96,8 +96,10 @@ UMUSIC_QUARANTINE_ROOT = Path(env("UMUSIC_QUARANTINE_ROOT", default=str(BASE_DIR
 UMUSIC_STORAGE_BACKEND = env("UMUSIC_STORAGE_BACKEND", default="local")
 UMUSIC_MAX_UPLOAD_BYTES = env.int("UMUSIC_MAX_UPLOAD_BYTES", default=150 * 1024 * 1024)
 UMUSIC_MAX_UPLOAD_FILES = env.int("UMUSIC_MAX_UPLOAD_FILES", default=100)
-UMUSIC_SIGNED_URL_TTL_SECONDS = env.int(
-    "UMUSIC_SIGNED_URL_TTL_SECONDS", default=7 * 24 * 60 * 60
+UMUSIC_SIGNED_URL_TTL_SECONDS = env.int("UMUSIC_SIGNED_URL_TTL_SECONDS", default=7 * 24 * 60 * 60)
+UMUSIC_V2_ACCESS_TOKEN_TTL_SECONDS = env.int("UMUSIC_V2_ACCESS_TOKEN_TTL_SECONDS", default=900)
+UMUSIC_V2_REFRESH_TOKEN_TTL_SECONDS = env.int(
+    "UMUSIC_V2_REFRESH_TOKEN_TTL_SECONDS", default=30 * 24 * 60 * 60
 )
 UMUSIC_FFPROBE_PATH = env("UMUSIC_FFPROBE_PATH", default="ffprobe")
 UMUSIC_USE_INTERNAL_REDIRECT = env.bool("UMUSIC_USE_INTERNAL_REDIRECT", default=False)
@@ -144,5 +146,9 @@ REST_FRAMEWORK = {
         "umusic.apps.accounts.permissions.DeviceScopePermission",
     ],
     "DEFAULT_THROTTLE_CLASSES": ["rest_framework.throttling.UserRateThrottle"],
-    "DEFAULT_THROTTLE_RATES": {"user": env("UMUSIC_API_RATE", default="600/min")},
+    "DEFAULT_THROTTLE_RATES": {
+        "user": env("UMUSIC_API_RATE", default="600/min"),
+        "auth_v2": env("UMUSIC_AUTH_V2_RATE", default="20/min"),
+        "bootstrap_v2": env("UMUSIC_BOOTSTRAP_V2_RATE", default="60/min"),
+    },
 }
