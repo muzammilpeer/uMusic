@@ -131,7 +131,12 @@ public actor LocalLearningStore: PersonalizationManaging, PlaybackLearningRecord
     }
 
     public func recentHistory(lastCalendarDays: Int, now: Date, calendar: Calendar) async -> [ListeningHistoryDay] {
-        let entries = document.observations.compactMap { observation -> ListeningHistoryEntry? in
+        var observations = document.observations
+        if let currentObservation,
+           !observations.contains(where: { $0.id == currentObservation.id }) {
+            observations.append(currentObservation)
+        }
+        let entries = observations.compactMap { observation -> ListeningHistoryEntry? in
             guard let track = document.trackSnapshots[observation.trackID] else { return nil }
             let observationContext = document.contexts.first(where: { $0.id == observation.contextID })
             let activity = observationContext?.activity ?? .unknown

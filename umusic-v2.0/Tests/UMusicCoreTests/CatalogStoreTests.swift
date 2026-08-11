@@ -33,11 +33,48 @@ func catalogRevisionGuard() async throws {
     #expect(try await store.snapshot().tracks.first?.title == "Current")
 }
 
+@Test("Versioned song features persist and malformed vectors cannot advance sync")
+func songFeaturePersistenceAndValidation() async throws {
+    let store = CatalogStore(inMemory: true)
+    let features = SongFeatureSnapshot(
+        schemaVersion: 1,
+        provider: "deterministic",
+        modelVersion: "checksum-fixture-1",
+        analysisRevision: 10,
+        scalars: ["energy": 0.4],
+        embedding: .init(encoding: "float16_le", dimension: 2, payload: Data([0, 0, 0, 0]))
+    )
+    let track = CatalogTrack(id: trackID, revision: 10, title: "Analyzed", artist: "Artist", album: nil, genres: [], language: nil, releaseYear: nil, durationMilliseconds: 1_000, available: true, songFeatures: features)
+    try await store.apply(.init(schemaVersion: 1, libraryRevision: "10", nextCursor: "feature-cursor", hasMore: false, tracks: [track], tombstones: []))
+    #expect(try await store.snapshot().tracks.first?.songFeatures == features)
+
+    let malformed = SongFeatureSnapshot(schemaVersion: 1, provider: "deterministic", modelVersion: "bad", analysisRevision: 11, scalars: [:], embedding: .init(encoding: "float16_le", dimension: 64, payload: Data([0])))
+    let invalidTrack = CatalogTrack(id: trackID, revision: 11, title: "Analyzed", artist: "Artist", album: nil, genres: [], language: nil, releaseYear: nil, durationMilliseconds: 1_000, available: true, songFeatures: malformed)
+    await #expect(throws: CatalogStoreError.self) {
+        try await store.apply(.init(schemaVersion: 1, libraryRevision: "11", nextCursor: "must-not-commit", hasMore: false, tracks: [invalidTrack], tombstones: []))
+    }
+    #expect(try await store.cursor() == "feature-cursor")
+}
+
 @Test("Tombstones hide tracks while retaining safe metadata")
 func catalogTombstone() async throws {
     let store = CatalogStore(inMemory: true)
     try await store.apply(page(revision: 1))
     try await store.apply(page(revision: 2, tombstone: true))
+    #expect(try await store.snapshot().tracks.isEmpty)
+}
+
+@Test("Full catalog reconciliation hides tracks absent from the server")
+func fullCatalogReconciliation() async throws {
+    let store = CatalogStore(inMemory: true)
+    let retained = CatalogTrack(id: UUID(), revision: 1, title: "Retained", artist: "Artist", album: nil, genres: [], language: nil, releaseYear: nil, durationMilliseconds: 1_000, available: true)
+    let removed = CatalogTrack(id: UUID(), revision: 1, title: "Removed", artist: "Artist", album: nil, genres: [], language: nil, releaseYear: nil, durationMilliseconds: 1_000, available: true)
+    try await store.apply(.init(schemaVersion: 1, libraryRevision: "1", nextCursor: "full-1", hasMore: false, tracks: [retained, removed], tombstones: []))
+
+    try await store.reconcileFullCatalog(serverTrackIDs: [retained.id])
+    #expect(try await store.snapshot().tracks.map(\.id) == [retained.id])
+
+    try await store.reconcileFullCatalog(serverTrackIDs: [])
     #expect(try await store.snapshot().tracks.isEmpty)
 }
 

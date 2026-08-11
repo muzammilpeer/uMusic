@@ -1,3 +1,4 @@
+import base64
 from datetime import UTC, datetime
 
 from django.core import signing
@@ -65,6 +66,21 @@ def _track_payload(membership: LibraryMembership) -> dict[str, object]:
     album = track.album
     artwork = track.artwork
     revision_time = max(track.updated_at, membership.updated_at)
+    analysis = getattr(track, "analysis", None)
+    song_features = None
+    if analysis is not None and analysis.status == "succeeded" and analysis.source_checksum == audio.checksum.lower():
+        song_features = {
+            "schema_version": analysis.feature_schema_version,
+            "provider": analysis.provider,
+            "model_version": analysis.model_version,
+            "analysis_revision": int(analysis.updated_at.timestamp() * 1_000_000),
+            "scalars": analysis.scalar_features,
+            "embedding": {
+                "encoding": analysis.embedding_encoding,
+                "dimension": analysis.embedding_dimension,
+                "payload": base64.b64encode(bytes(analysis.embedding)).decode("ascii"),
+            },
+        }
     return {
         "id": str(track.id),
         "revision": int(revision_time.timestamp() * 1_000_000),
@@ -98,6 +114,7 @@ def _track_payload(membership: LibraryMembership) -> dict[str, object]:
             "instrumental_probability": None,
             "speech_probability": None,
         },
+        "song_features": song_features,
         "artwork": ({"id": artwork.checksum, "etag": artwork.checksum} if artwork else None),
         "audio": {
             "id": audio.checksum,
@@ -141,6 +158,7 @@ class LibraryChangesV2View(APIView):
                 "track__album__album_artist",
                 "track__artwork",
                 "track__audio_file",
+                "track__analysis",
             )
             .order_by("change_time", "id")
         )

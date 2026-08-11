@@ -86,12 +86,27 @@ func modelRecommendationIntegration() async throws {
     #expect(result.trace?.mode == .model && result.trace?.modelVersion == "fixture-1")
 }
 
-@Test("Bundled feature manifest is available while an untrusted model remains uninstalled")
-func modelResourceLookup() throws {
+@Test("Bundled cold-start model validates and passes its canary")
+func modelResourceLookup() async throws {
     let manifest = try UMusicResources.rankerFeatureManifest()
     #expect(manifest.orderedFeatures == ModelRankerLifecycle.supportedFeatures)
-    #expect(manifest.modelVersion == "uninstalled")
-    #expect(UMusicResources.bundledRankerModelURL() == nil)
+    #expect(manifest.modelVersion == "coldstart-prior-1")
+    let bundled = try UMusicResources.bundledRanker()
+    try await bundled.lifecycle.enableShadow()
+    #expect(await bundled.lifecycle.evaluationSnapshot().mode == .shadow)
+}
+
+@Test("Signed model validation is stable through a symlinked bundle path")
+func modelSymlinkValidation() throws {
+    let modelURL = try #require(UMusicResources.bundledRankerModelURL())
+    let link = FileManager.default.temporaryDirectory.appending(path: "ranker-link-\(UUID()).mlmodelc")
+    defer { try? FileManager.default.removeItem(at: link) }
+    try FileManager.default.createSymbolicLink(at: link, withDestinationURL: modelURL)
+    _ = try SignedModelValidator.validate(
+        modelAt: link,
+        manifest: UMusicResources.rankerFeatureManifest(),
+        trustedPublicKeys: UMusicResources.trustedRankerPublicKeys()
+    )
 }
 
 @Test("Synthetic ranker improves over the majority baseline within the local latency diagnostic")

@@ -148,6 +148,27 @@ func playingMediaIsProtected() async throws {
     #expect(await coordinator.cachedFile(for: first.id) != nil)
 }
 
+@Test("Remove all downloads clears every device file including the playing track")
+func removeAllDownloadsIncludesPlayback() async throws {
+    let root = temporaryOfflineRoot(); defer { try? FileManager.default.removeItem(at: root) }
+    let playing = offlineTrack("Playing"), other = offlineTrack("Other")
+    let (coordinator, _, _) = await makeOfflineCoordinator(
+        root: root,
+        tracks: [(playing, Data(repeating: 1, count: 6)), (other, Data(repeating: 2, count: 7))]
+    )
+    try await coordinator.download(playing, retention: .pinned)
+    try await coordinator.download(other, retention: .rolling)
+    await coordinator.setCurrentlyPlaying(trackID: playing.id)
+
+    try await coordinator.removeAllDownloads()
+
+    let cleared = await coordinator.storageSnapshot()
+    #expect(cleared.entries.isEmpty)
+    #expect(cleared.usedBytes == 0)
+    #expect(await coordinator.cachedFile(for: playing.id) == nil)
+    #expect(await coordinator.cachedFile(for: other.id) == nil)
+}
+
 @Test("Reconciliation removes orphan files without touching catalog state")
 func offlineReconciliation() async throws {
     let root = temporaryOfflineRoot(); defer { try? FileManager.default.removeItem(at: root) }

@@ -49,9 +49,34 @@ public enum ModelRankingOutcome: Sendable {
 
 public enum SignedModelValidator {
     public static func validate(modelData: Data, manifest: RankerFeatureManifest, trustedPublicKeys: [String: Data], currentOSMajorVersion: Int = ProcessInfo.processInfo.operatingSystemVersion.majorVersion) throws -> ValidatedRankerManifest {
+        try validate(modelDigest: Data(SHA256.hash(data: modelData)), manifest: manifest, trustedPublicKeys: trustedPublicKeys, currentOSMajorVersion: currentOSMajorVersion)
+    }
+
+    public static func validate(modelAt url: URL, manifest: RankerFeatureManifest, trustedPublicKeys: [String: Data], currentOSMajorVersion: Int = ProcessInfo.processInfo.operatingSystemVersion.majorVersion) throws -> ValidatedRankerManifest {
+        let manager = FileManager.default
+        let canonicalRoot = url.standardizedFileURL.resolvingSymlinksInPath()
+        let keys: Set<URLResourceKey> = [.isRegularFileKey]
+        guard let enumerator = manager.enumerator(at: canonicalRoot, includingPropertiesForKeys: Array(keys), options: [.skipsHiddenFiles]) else { throw ModelRankerError.corruptModel }
+        let files = enumerator.compactMap { $0 as? URL }.filter { (try? $0.resourceValues(forKeys: keys).isRegularFile) == true }.sorted { $0.path < $1.path }
+        guard !files.isEmpty else { throw ModelRankerError.corruptModel }
+        var hasher = SHA256()
+        for file in files {
+            let relativePath = String(file.path.dropFirst(canonicalRoot.path.count)).trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+            hasher.update(data: Data(relativePath.utf8)); hasher.update(data: Data([0]))
+            let handle = try FileHandle(forReadingFrom: file); defer { try? handle.close() }
+            while true {
+                let chunk = try handle.read(upToCount: 1_048_576) ?? Data()
+                if chunk.isEmpty { break }
+                hasher.update(data: chunk)
+            }
+        }
+        return try validate(modelDigest: Data(hasher.finalize()), manifest: manifest, trustedPublicKeys: trustedPublicKeys, currentOSMajorVersion: currentOSMajorVersion)
+    }
+
+    public static func validate(modelDigest digest: Data, manifest: RankerFeatureManifest, trustedPublicKeys: [String: Data], currentOSMajorVersion: Int = ProcessInfo.processInfo.operatingSystemVersion.majorVersion) throws -> ValidatedRankerManifest {
         guard manifest.schemaVersion == 1, manifest.orderedFeatures == ModelRankerLifecycle.supportedFeatures else { throw ModelRankerError.incompatibleSchema }
         guard currentOSMajorVersion >= manifest.minimumOSMajorVersion else { throw ModelRankerError.incompatibleOS }
-        let digest = Data(SHA256.hash(data: modelData)), expected = digest.map { String(format: "%02x", $0) }.joined()
+        let expected = digest.map { String(format: "%02x", $0) }.joined()
         guard expected == manifest.modelSHA256.lowercased() else { throw ModelRankerError.corruptModel }
         let payload = signingPayload(modelDigest: digest, manifest: manifest)
         guard let keyData = trustedPublicKeys[manifest.publicKeyID], let signature = Data(base64Encoded: manifest.signature), let key = try? Curve25519.Signing.PublicKey(rawRepresentation: keyData), key.isValidSignature(signature, for: payload) else { throw ModelRankerError.badSignature }

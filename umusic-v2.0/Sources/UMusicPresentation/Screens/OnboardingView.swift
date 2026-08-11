@@ -11,6 +11,7 @@ public final class AuthenticationViewModel {
     public var keepSignedIn = true
     public var allowsInsecureLocalhost = false
     public private(set) var state: AuthenticationState = .signedOut
+    public private(set) var isRestoringSession = true
 
     private let authentication: any AuthenticationManaging
 
@@ -28,8 +29,19 @@ public final class AuthenticationViewModel {
     }
 
     public func observe() async {
+        var snapshots = authentication.snapshots.makeAsyncIterator()
+        // Authentication coordinators seed their stream with the current state.
+        // Consume that seed while the launch screen is still visible, then wait
+        // for restore() to publish the authoritative Keychain restoration result.
+        if let initialState = await snapshots.next() {
+            state = initialState
+        }
         await authentication.restore()
-        for await snapshot in authentication.snapshots {
+        if let restoredState = await snapshots.next() {
+            state = restoredState
+        }
+        isRestoringSession = false
+        while let snapshot = await snapshots.next() {
             state = snapshot
         }
     }
@@ -127,15 +139,42 @@ public struct UMusicRootView: View {
 
     public var body: some View {
         Group {
-            switch authenticationModel.state {
+            if authenticationModel.isRestoringSession {
+                LaunchLoadingView()
+            } else {
+                authenticatedContent
+            }
+        }
+        .task { await authenticationModel.observe() }
+    }
+
+    @ViewBuilder
+    private var authenticatedContent: some View {
+        switch authenticationModel.state {
             case .authenticated:
                 AppShellView(authentication: client.authentication, library: client.library, playback: client.playback, offline: client.offline, playlists: client.playlists, personalization: client.personalization, context: client.context, calendarPreferences: client.calendarPreferences, diagnostics: client.diagnostics)
             case .validatingServer, .authenticating:
                 ProgressView("Connecting securely…")
             default:
                 OnboardingView(model: authenticationModel)
-            }
         }
-        .task { await authenticationModel.observe() }
+    }
+}
+
+private struct LaunchLoadingView: View {
+    var body: some View {
+        VStack(spacing: 18) {
+            Image(systemName: "music.note")
+                .font(.system(size: 46, weight: .semibold))
+                .foregroundStyle(.tint)
+            Text("uMusic")
+                .font(.largeTitle.bold())
+            ProgressView("Restoring your session…")
+                .controlSize(.large)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(.background)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("uMusic, restoring your session")
     }
 }

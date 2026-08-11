@@ -125,6 +125,16 @@ CELERY_BROKER_URL = env("CELERY_BROKER_URL", default="redis://localhost:6379/1")
 CELERY_RESULT_BACKEND = env("CELERY_RESULT_BACKEND", default="redis://localhost:6379/2")
 CELERY_TASK_TRACK_STARTED = True
 CELERY_TASK_TIME_LIMIT = 30 * 60
+UMUSIC_FFMPEG_PATH = env("UMUSIC_FFMPEG_PATH", default="ffmpeg")
+UMUSIC_MERT_MODEL_ID = env("UMUSIC_MERT_MODEL_ID", default="m-a-p/MERT-v1-95M")
+UMUSIC_MERT_MODEL_REVISION = env(
+    "UMUSIC_MERT_MODEL_REVISION", default="12af15fef9d0ac838c3f475bfbbf26d2060dd4f5"
+)
+UMUSIC_MERT_CACHE = env("UMUSIC_MERT_CACHE", default="/models/huggingface")
+UMUSIC_MERT_LOCAL_FILES_ONLY = env.bool("UMUSIC_MERT_LOCAL_FILES_ONLY", default=False)
+UMUSIC_MERT_CPU_THREADS = env.int("UMUSIC_MERT_CPU_THREADS", default=4)
+UMUSIC_MERT_EXCERPT_SECONDS = env.float("UMUSIC_MERT_EXCERPT_SECONDS", default=5.0)
+UMUSIC_MERT_MAX_AUDIO_BYTES = env.int("UMUSIC_MERT_MAX_AUDIO_BYTES", default=200 * 1024 * 1024)
 CELERY_BEAT_SCHEDULE = {
     "nightly-learning-rebuild": {
         "task": "umusic.apps.recommendations.tasks.rebuild_all_learning",
@@ -150,5 +160,20 @@ REST_FRAMEWORK = {
         "user": env("UMUSIC_API_RATE", default="600/min"),
         "auth_v2": env("UMUSIC_AUTH_V2_RATE", default="20/min"),
         "bootstrap_v2": env("UMUSIC_BOOTSTRAP_V2_RATE", default="60/min"),
+    },
+}
+
+# Production containers must surface unhandled request failures in their logs.
+# Django otherwise returns a generic 500 response with no actionable traceback.
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {"console": {"class": "logging.StreamHandler"}},
+    "loggers": {
+        "django.request": {
+            "handlers": ["console"],
+            "level": "ERROR",
+            "propagate": False,
+        }
     },
 }

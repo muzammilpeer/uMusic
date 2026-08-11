@@ -33,14 +33,27 @@ public actor LibrarySyncCoordinator: LibraryProviding {
         do {
             let server = try await authentication.currentServer()
             let token = try await authentication.validAccessToken()
-            var cursor = try await store.cursor()
+            // A user-initiated Sync is authoritative. Always start from the beginning so
+            // a server-side reset can also remove locally cached catalog rows even when
+            // the server no longer has tombstones for those tracks.
+            var cursor: String?
+            var pages: [LibraryChangePage] = []
+            var serverTrackIDs = Set<UUID>()
             repeat {
                 try Task.checkCancellation()
                 let page = try await api.changes(server: server, accessToken: token, cursor: cursor, limit: 500)
-                try await store.apply(page)
+                pages.append(page)
+                serverTrackIDs.formUnion(page.tracks.lazy.filter(\.available).map(\.id))
                 cursor = page.nextCursor
                 if !page.hasMore { break }
             } while true
+
+            // Do not mutate the local catalog until every page has arrived. A failed or
+            // interrupted refresh therefore leaves the last usable library untouched.
+            for page in pages {
+                try await store.apply(page)
+            }
+            try await store.reconcileFullCatalog(serverTrackIDs: serverTrackIDs)
             continuation.yield(try await store.snapshot())
         } catch {
             continuation.yield(cached)

@@ -14,6 +14,7 @@ struct HomeScreen: View {
     @State private var offlineSnapshot = OfflineStorageSnapshot(usedBytes: 0, quotaBytes: 500 * 1_024 * 1_024)
     @State private var isStarting = false
     @State private var errorMessage: String?
+    @State private var errorTitle = "Unable to Start Listening"
     @State private var suggestedPlaylist: ManualPlaylist?
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -32,10 +33,11 @@ struct HomeScreen: View {
             .animation(HomeMotionPolicy.animation(reduceMotion: reduceMotion), value: history.count)
         }
         .scrollDismissesKeyboard(.interactively)
+        .refreshable { await refresh() }
         .navigationTitle("Home")
         .task { await observeLibrary() }
         .task { await loadSupportingState() }
-        .alert("Unable to Start Listening", isPresented: Binding(get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } })) {
+        .alert(errorTitle, isPresented: Binding(get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } })) {
             Button("OK") { errorMessage = nil }
         } message: { Text(errorMessage ?? "") }
     }
@@ -193,6 +195,22 @@ struct HomeScreen: View {
         suggestedPlaylist = await calendarPreferences?.suggestedPlaylist(at: Date())
     }
 
+    private func refresh() async {
+        do {
+            try await library?.sync()
+            if let library {
+                let tracks = try await library.browse(.init())
+                librarySnapshot = .init(tracks: tracks, lastSyncAt: librarySnapshot.lastSyncAt, isSyncing: false)
+                await playback?.reconcileQueue(availableTracks: tracks)
+            }
+            await loadSupportingState()
+        } catch is CancellationError {
+        } catch {
+            errorTitle = "Unable to Refresh Home"
+            errorMessage = "Home could not refresh from the server. Your cached music is still available."
+        }
+    }
+
     private func startListening() async {
         if let preferred = await calendarPreferences?.preferredPlaylist(at: Date()), !preferred.tracks.isEmpty {
             await play(preferred.tracks)
@@ -208,6 +226,7 @@ struct HomeScreen: View {
 
     private func play(_ tracks: [TrackSummary], automatic: Bool = false) async {
         guard !tracks.isEmpty else {
+            errorTitle = "Unable to Start Listening"
             errorMessage = "No cached songs are available. Open Library and choose Sync when online."
             return
         }
@@ -228,7 +247,7 @@ struct HomeStarterMix: Identifiable, Equatable {
 
     static func make(from tracks: [TrackSummary]) -> [HomeStarterMix] {
         guard !tracks.isEmpty else { return [] }
-        var mixes = [HomeStarterMix(id: "all", title: "All Music", icon: "shuffle", tracks: Array(tracks.prefix(25)))]
+        var mixes = [HomeStarterMix(id: "all", title: "All Music", icon: "shuffle", tracks: tracks)]
         if let genre = tracks.compactMap({ $0.genres?.first }).first {
             let matches = tracks.filter { $0.genres?.contains(where: { $0.caseInsensitiveCompare(genre) == .orderedSame }) == true }
             if !matches.isEmpty { mixes.append(.init(id: "genre-\(genre.lowercased())", title: genre, icon: "guitars", tracks: Array(matches.prefix(25)))) }

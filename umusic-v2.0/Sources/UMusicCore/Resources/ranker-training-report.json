@@ -1,0 +1,8 @@
+{
+  "examples" : 4096,
+  "model_version" : "coldstart-prior-1",
+  "personalized" : false,
+  "training_maximum_error" : 0.79158708679923162,
+  "training_source" : "deterministic-curated-scenarios",
+  "validation_maximum_error" : 0.65309377681519631
+}

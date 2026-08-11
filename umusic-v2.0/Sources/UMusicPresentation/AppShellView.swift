@@ -3,13 +3,7 @@ import UMusicCore
 
 public struct AppShellView: View {
     @State private var navigation = AppNavigationModel()
-    @State private var showsAccount = false
-    @State private var showsOffline = false
-    @State private var showsAppearance = false
-    @State private var showsLearning = false
-    @State private var showsActivity = false
-    @State private var showsCalendarPreferences = false
-    @State private var showsDiagnostics = false
+    @State private var showsSettings = false
     @AppStorage(UMusicTheme.themeDefaultsKey) private var themeRawValue = UMusicThemePreference.system.rawValue
     @AppStorage(UMusicTheme.accentDefaultsKey) private var accentRawValue = UMusicAccent.violet.rawValue
     private let authentication: (any AuthenticationManaging)?
@@ -44,11 +38,6 @@ public struct AppShellView: View {
         }
         .tint(selectedAccent.color)
         .preferredColorScheme(selectedTheme.colorScheme)
-        .safeAreaInset(edge: .bottom, spacing: 0) {
-            if playbackSnapshot.track != nil, let playback {
-                MiniPlayer(snapshot: playbackSnapshot, playback: playback) { navigation.selectedTab = .now }
-            }
-        }
         .task {
             navigation.restore(from: restoredNavigation)
             guard let playback else { return }
@@ -65,22 +54,20 @@ public struct AppShellView: View {
             guard let playback else { return }
             Task { playbackSnapshot.phase == .playing ? await playback.pause() : await playback.play() }
         }))
-        .toolbar {
-            Button("Appearance", systemImage: "paintpalette") { showsAppearance = true }
-            if personalization != nil { Button("Learning & Privacy", systemImage: "brain.head.profile") { showsLearning = true } }
-            if context != nil { Button("Activity & Context", systemImage: "figure.walk") { showsActivity = true } }
-            if calendarPreferences != nil, playlists != nil { Button("Calendar & Smart Playlists", systemImage: "calendar") { showsCalendarPreferences = true } }
-            if offline != nil { Button("Offline Storage", systemImage: "arrow.down.circle") { showsOffline = true } }
-            if authentication != nil { Button("Account", systemImage: "person.crop.circle") { showsAccount = true } }
-            if diagnostics != nil { Button("Diagnostics", systemImage: "stethoscope") { showsDiagnostics = true } }
+        .sheet(isPresented: $showsSettings) {
+            SettingsMenuView(
+                authentication: authentication,
+                playback: playback,
+                offline: offline,
+                personalization: personalization,
+                context: context,
+                calendarPreferences: calendarPreferences,
+                playlists: playlists,
+                diagnostics: diagnostics,
+                themeRawValue: $themeRawValue,
+                accentRawValue: $accentRawValue
+            )
         }
-        .sheet(isPresented: $showsAccount) { if let authentication { AccountSessionView(authentication: authentication) } }
-        .sheet(isPresented: $showsOffline) { if let offline { OfflineSettingsView(offline: offline) } }
-        .sheet(isPresented: $showsAppearance) { AppearanceSettingsView(themeRawValue: $themeRawValue, accentRawValue: $accentRawValue) }
-        .sheet(isPresented: $showsLearning) { if let personalization { LearningPrivacyView(personalization: personalization) } }
-        .sheet(isPresented: $showsActivity) { if let context { ActivityContextView(context: context) } }
-        .sheet(isPresented: $showsCalendarPreferences) { if let calendarPreferences, let playlists { CalendarPreferenceView(preferences: calendarPreferences, playlists: playlists) } }
-        .sheet(isPresented: $showsDiagnostics) { if let diagnostics { DiagnosticsView(provider: diagnostics) } }
     }
 
     private var compactTabView: some View {
@@ -93,7 +80,9 @@ public struct AppShellView: View {
                 .tabItem { Label("Library", systemImage: "music.note.list") }
                 .tag(AppTab.library)
 
-            tabNavigation(path: $navigation.nowPath) { NowScreen(playback: playback, snapshot: playbackSnapshot, context: context) }
+            tabNavigation(path: $navigation.nowPath) {
+                NowScreen(playback: playback, snapshot: playbackSnapshot, context: context) { navigation.selectedTab = .home }
+            }
                 .tabItem { Label("Now", systemImage: "play.circle") }
                 .tag(AppTab.now)
 
@@ -117,7 +106,10 @@ public struct AppShellView: View {
         switch navigation.selectedTab {
         case .home: tabNavigation(path: $navigation.homePath) { HomeScreen(library: library, playback: playback, offline: offline, personalization: personalization, calendarPreferences: calendarPreferences, playbackSnapshot: playbackSnapshot) }
         case .library: tabNavigation(path: $navigation.libraryPath) { LibraryScreen(library: library, playback: playback, offline: offline, playlists: playlists) }
-        case .now: tabNavigation(path: $navigation.nowPath) { NowScreen(playback: playback, snapshot: playbackSnapshot, context: context) }
+        case .now:
+            tabNavigation(path: $navigation.nowPath) {
+                NowScreen(playback: playback, snapshot: playbackSnapshot, context: context) { navigation.selectedTab = .home }
+            }
         case .search: tabNavigation(path: $navigation.searchPath) { SearchScreen(query: $navigation.searchQuery, searchPresented: $searchPresented, library: library, playback: playback, offline: offline, playlists: playlists) }
         }
     }
@@ -144,6 +136,82 @@ public struct AppShellView: View {
                 .navigationDestination(for: AppRoute.self) { route in
                     DeepLinkDestination(route: route, library: library, playback: playback, offline: offline, playlists: playlists)
                 }
+                .toolbar {
+                    ToolbarItem(placement: .primaryAction) {
+                        Button { showsSettings = true } label: {
+                            Label("Menu", systemImage: "line.3.horizontal")
+                                .font(.body.weight(.semibold))
+                                .foregroundStyle(.primary)
+                        }
+                        .buttonStyle(.bordered)
+                        .accessibilityLabel("Open uMusic Menu")
+                    }
+                }
+        }
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            if playbackSnapshot.track != nil, let playback {
+                MiniPlayer(snapshot: playbackSnapshot, playback: playback) { navigation.selectedTab = .now }
+            }
+        }
+    }
+}
+
+private struct SettingsMenuView: View {
+    let authentication: (any AuthenticationManaging)?
+    let playback: (any PlaybackControlling)?
+    let offline: (any OfflineManaging)?
+    let personalization: (any PersonalizationManaging)?
+    let context: (any ContextManaging)?
+    let calendarPreferences: (any CalendarPreferenceManaging)?
+    let playlists: (any PlaylistManaging)?
+    let diagnostics: (any DiagnosticsProviding)?
+    @Binding var themeRawValue: String
+    @Binding var accentRawValue: String
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            List {
+                Section("Settings") {
+                    NavigationLink {
+                        AppearanceSettingsView(themeRawValue: $themeRawValue, accentRawValue: $accentRawValue)
+                    } label: { Label("Appearance", systemImage: "paintpalette") }
+                    if let offline {
+                        NavigationLink {
+                            OfflineSettingsView(offline: offline, playback: playback)
+                        } label: { Label("Offline Storage", systemImage: "arrow.down.circle") }
+                    }
+                    if let personalization {
+                        NavigationLink {
+                            LearningPrivacyView(personalization: personalization)
+                        } label: { Label("Learning & Privacy", systemImage: "brain.head.profile") }
+                    }
+                    if let context {
+                        NavigationLink {
+                            ActivityContextView(context: context)
+                        } label: { Label("Activity & Context", systemImage: "figure.walk") }
+                    }
+                    if let calendarPreferences, let playlists {
+                        NavigationLink {
+                            CalendarPreferenceView(preferences: calendarPreferences, playlists: playlists)
+                        } label: { Label("Calendar & Smart Playlists", systemImage: "calendar") }
+                    }
+                }
+                Section("Support") {
+                    if let diagnostics {
+                        NavigationLink {
+                            DiagnosticsView(provider: diagnostics)
+                        } label: { Label("Diagnostics", systemImage: "stethoscope") }
+                    }
+                    if let authentication {
+                        NavigationLink {
+                            AccountSessionView(authentication: authentication)
+                        } label: { Label("Account", systemImage: "person.crop.circle") }
+                    }
+                }
+            }
+            .navigationTitle("uMusic Menu")
+            .toolbar { Button("Done") { dismiss() } }
         }
     }
 }
@@ -240,6 +308,13 @@ private struct LearningPrivacyView: View {
                     Text("Learning data stays on this device unless you explicitly export it.")
                         .font(.caption).foregroundStyle(.secondary)
                 }
+                Section("Personalized Model Readiness") {
+                    LabeledContent("Usable observations", value: "\(snapshot.observationCount)")
+                    LabeledContent("Stage", value: trainingReadiness)
+                    ProgressView(value: min(Double(snapshot.observationCount), 200), total: 200)
+                    Text("The included cold-start model works immediately. Personal history gradually changes its completion, skip, and exposure inputs. Around 200 complete listening observations provides a more useful first personalized training export; smaller exports are still valid for debugging.")
+                        .font(.caption).foregroundStyle(.secondary)
+                }
                 Section("Raw History Retention") {
                     Picker("Keep raw history", selection: Binding(get: { snapshot.retention }, set: { value in Task { await setRetention(value) } })) {
                         Text("7 days").tag(RawHistoryRetention.sevenDays)
@@ -252,10 +327,10 @@ private struct LearningPrivacyView: View {
                         .font(.caption).foregroundStyle(.secondary)
                 }
                 Section("Export") {
-                    Button("Prepare Sanitized Export", systemImage: "square.and.arrow.up") { Task { await prepareExport() } }
-                    Button("Preview Full Research Export", systemImage: "doc.badge.gearshape") { Task { await previewFullExport() } }
+                    Button("Prepare Sanitized Debug Export", systemImage: "square.and.arrow.up") { Task { await prepareExport() } }
+                    Button("Export Training Data to Mac", systemImage: "desktopcomputer.and.arrow.down") { Task { await previewFullExport() } }
                     if exportURL != nil { Button("Review & Share Export", systemImage: "paperplane") { showsExportReview = true } }
-                    Text("Sanitized packages exclude credentials, server details, usernames, file paths, coordinates, raw HealthKit values, and accessory identifiers. Full packages remain local until you explicitly share them.")
+                    Text("Personalized training needs the Full Research Export because it contains track metadata and the chronological listening timeline. It remains on this device until you explicitly share it through AirDrop, Files, or another destination. Sanitized debug exports cannot train the complete ranker.")
                         .font(.caption).foregroundStyle(.secondary)
                 }
                 Section("Delete") {
@@ -291,6 +366,12 @@ private struct LearningPrivacyView: View {
     }
 
     private func reload() async { snapshot = await personalization.learningSnapshot() }
+    private var trainingReadiness: String {
+        if snapshot.observationCount < 25 { return "Collecting" }
+        if snapshot.observationCount < 100 { return "Early sample" }
+        if snapshot.observationCount < 200 { return "Useful for experiments" }
+        return "Ready for first training"
+    }
     private func setRetention(_ value: RawHistoryRetention) async { do { try await personalization.setRawHistoryRetention(value); await reload() } catch { errorMessage = "The retention setting could not be saved." } }
     private func deleteHistory() async { do { try await personalization.deleteHistory(); await reload() } catch { errorMessage = "Listening history could not be deleted." } }
     private func resetLearning() async { do { try await personalization.resetLearning(); await reload() } catch { errorMessage = "Learning data could not be reset." } }
@@ -363,9 +444,11 @@ private struct AppearanceSettingsView: View {
 
 private struct OfflineSettingsView: View {
     let offline: any OfflineManaging
+    let playback: (any PlaybackControlling)?
     @State private var snapshot = OfflineStorageSnapshot(usedBytes: 0, quotaBytes: 500 * 1_024 * 1_024)
     @State private var customMegabytes = ""
     @State private var errorMessage: String?
+    @State private var confirmsRemoveAll = false
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -378,6 +461,7 @@ private struct OfflineSettingsView: View {
                         Text("100 MB").tag(Int64(100 * 1_024 * 1_024))
                         Text("500 MB").tag(Int64(500 * 1_024 * 1_024))
                         Text("1 GB").tag(Int64(1_024 * 1_024 * 1_024))
+                        Text("5 GB").tag(Int64(5 * 1_024 * 1_024 * 1_024))
                     }
                     HStack {
                         TextField("Custom MB", text: $customMegabytes)
@@ -397,11 +481,29 @@ private struct OfflineSettingsView: View {
                             Button("Remove", systemImage: "trash", role: .destructive) { Task { do { try await offline.removeDownload(trackID: entry.trackID); await reload() } catch { errorMessage = "This download cannot be removed while it is playing." } } }.labelStyle(.iconOnly)
                         }
                     }
+                    if !snapshot.entries.isEmpty {
+                        Button("Remove All Downloads", systemImage: "trash", role: .destructive) {
+                            confirmsRemoveAll = true
+                        }
+                        .accessibilityHint("Removes downloaded music from this device while keeping your library and learning data")
+                    }
                 }
             }
             .navigationTitle("Offline Storage")
             .toolbar { Button("Done") { dismiss() } }
             .task { await reload() }
+            .confirmationDialog(
+                "Remove all downloaded music?",
+                isPresented: $confirmsRemoveAll,
+                titleVisibility: .visible
+            ) {
+                Button("Remove All Downloads", role: .destructive) {
+                    Task { await removeAll() }
+                }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text("This will stop playback and free \(ByteCountFormatter.string(fromByteCount: snapshot.usedBytes, countStyle: .file)) on this device. Every downloaded song, including the current song, will be removed. Your library, playlists, MERT features, and learning history will remain.")
+            }
             .alert("Storage Change Failed", isPresented: .constant(errorMessage != nil)) { Button("OK") { errorMessage = nil } } message: { Text(errorMessage ?? "") }
         }
     }
@@ -410,6 +512,10 @@ private struct OfflineSettingsView: View {
     private func applyQuota(_ bytes: Int64) async {
         do { try await offline.setQuota(bytes: bytes); await reload() }
         catch { errorMessage = "Pinned or currently playing music does not fit in that quota." }
+    }
+    private func removeAll() async {
+        do { await playback?.pause(); try await offline.removeAllDownloads(); await reload() }
+        catch { errorMessage = "Some downloads could not be removed. Please try again."; await reload() }
     }
 }
 

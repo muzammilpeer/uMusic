@@ -48,4 +48,26 @@ public enum UMusicResources {
     }
 
     public static func bundledRankerModelURL() -> URL? { Bundle.module.url(forResource: "UMusicRanker", withExtension: "mlmodelc") }
+
+    public static func trustedRankerPublicKeys() throws -> [String: Data] {
+        guard let url = Bundle.module.url(forResource: "ranker-trusted-keys", withExtension: "json") else { throw CocoaError(.fileNoSuchFile) }
+        let encoded = try JSONDecoder().decode([String: String].self, from: Data(contentsOf: url))
+        return try encoded.mapValues { value in
+            guard let data = Data(base64Encoded: value) else { throw CocoaError(.fileReadCorruptFile) }
+            return data
+        }
+    }
+
+    public static func bundledRanker() throws -> BundledRanker {
+        guard let modelURL = bundledRankerModelURL() else { throw ModelRankerError.unavailable }
+        let manifest = try rankerFeatureManifest()
+        let validated = try SignedModelValidator.validate(modelAt: modelURL, manifest: manifest, trustedPublicKeys: try trustedRankerPublicKeys())
+        let scorer = try CoreMLModelScorer(compiledModelURL: modelURL)
+        return BundledRanker(manifest: manifest, lifecycle: ModelRankerLifecycle(validated: validated, scorer: scorer))
+    }
+}
+
+public struct BundledRanker: Sendable {
+    public let manifest: RankerFeatureManifest
+    public let lifecycle: ModelRankerLifecycle
 }

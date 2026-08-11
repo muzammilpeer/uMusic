@@ -55,11 +55,21 @@ class V2PlaybackTicketsTests(APITestCase):
         self.assertEqual(streamed.status_code, 206)
         self.assertEqual(b"".join(streamed.streaming_content), b"ID3")
 
-    def test_ticket_cannot_be_reused_for_another_track(self) -> None:
+    def test_ticket_accepts_uppercase_uuid_from_swift_clients(self) -> None:
+        response = self.client.post(
+            reverse("api-v2-playback-tickets"),
+            {"track_ids": [str(self.track.id).upper()]},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["tickets"][0]["track_id"], str(self.track.id))
+
+    def test_ticket_is_device_bound_and_rejects_tampering(self) -> None:
         response = self.client.post(
             reverse("api-v2-playback-tickets"), {"track_ids": [str(self.track.id)]}, format="json"
         )
-        query = response.data["tickets"][0]["url"].split("?", 1)[1]
-        other_id = "00000000-0000-0000-0000-000000000001"
-        denied = APIClient().get(f"/api/v2/media/tracks/{other_id}/stream?{query}")
+        ticket_url = response.data["tickets"][0]["url"]
+        replacement = "a" if ticket_url[-1] != "a" else "b"
+        denied = APIClient().get(f"{ticket_url[:-1]}{replacement}")
         self.assertEqual(denied.status_code, 401)

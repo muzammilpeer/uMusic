@@ -62,6 +62,30 @@ services:
     <<: *app
     command: celery -A config worker --loglevel=INFO
 
+  analysis-worker:
+    <<: *app
+    build:
+      context: .
+      dockerfile: Dockerfile.analysis
+    environment:
+      DJANGO_DEBUG: "false"
+      DATABASE_URL: postgresql://umusic:${POSTGRES_PASSWORD}@postgres:5432/umusic
+      CELERY_BROKER_URL: redis://redis:6379/1
+      CELERY_RESULT_BACKEND: redis://redis:6379/2
+      UMUSIC_MEDIA_ROOT: /data/media
+      UMUSIC_STORAGE_BACKEND: ${UMUSIC_STORAGE_BACKEND:-local}
+      UMUSIC_AUDIO_ANALYSIS_PROVIDER: mert
+      UMUSIC_MERT_CACHE: /models/huggingface
+      UMUSIC_MERT_LOCAL_FILES_ONLY: "true"
+      UMUSIC_MERT_CPU_THREADS: ${UMUSIC_MERT_CPU_THREADS:-4}
+      HF_HOME: /models/huggingface
+      HF_MODULES_CACHE: /models/modules
+      TRANSFORMERS_CACHE: /models/huggingface
+    command: celery -A config worker --loglevel=INFO --queues=audio_analysis --concurrency=1 --prefetch-multiplier=1
+    volumes:
+      - ${UMUSIC_MEDIA_PATH:-./data/media}:/data/media:ro
+      - model-cache:/models
+
   scheduler:
     <<: *app
     command: celery -A config beat --loglevel=INFO
@@ -94,5 +118,6 @@ services:
     restart: unless-stopped
 
 volumes:
+  model-cache:
   postgres-prod:
   redis-prod:

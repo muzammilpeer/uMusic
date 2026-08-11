@@ -15,6 +15,9 @@ struct LibraryScreen: View {
     @State private var year: Int?
     @State private var playlistSummaries: [PlaylistSummary] = []
     @State private var errorMessage: String?
+    @State private var confirmsDownloadAll = false
+    @State private var bulkDownloadProgress: BulkDownloadProgress?
+    @State private var showsFilters = false
 
     private var sourceTracks: [TrackSummary] { query.isEmpty ? snapshot.tracks : searchResults }
     private var filteredTracks: [TrackSummary] {
@@ -38,6 +41,7 @@ struct LibraryScreen: View {
                 facetList
             }
         }
+        .refreshable { await sync() }
         .navigationTitle(selectedFacet ?? sectionTitle)
         .searchable(text: $query, prompt: "Songs, artists, albums, genres")
         .scrollDismissesKeyboard(.interactively)
@@ -46,21 +50,51 @@ struct LibraryScreen: View {
                 Menu(sectionTitle, systemImage: "rectangle.grid.1x2") {
                     ForEach(LibrarySection.allCases, id: \.self) { value in Button(value.rawValue.capitalized) { section = value; selectedFacet = nil } }
                 }
-                Menu("Filter", systemImage: "line.3.horizontal.decrease.circle") {
-                    Button("All languages") { language = nil }
-                    ForEach(Set(snapshot.tracks.map { $0.language ?? "Unknown" }).sorted(), id: \.self) { value in Button(value) { language = value } }
-                    Divider()
-                    Button("All years") { year = nil }
-                    ForEach(Set(snapshot.tracks.compactMap(\.releaseYear)).sorted(by: >), id: \.self) { value in Button(String(value)) { year = value } }
+                Button {
+                    showsFilters = true
+                } label: {
+                    Label("Filter", systemImage: language == nil && year == nil ? "line.3.horizontal.decrease.circle" : "line.3.horizontal.decrease.circle.fill")
+                }
+                if offline != nil {
+                    Button("Download All", systemImage: "arrow.down.circle") { confirmsDownloadAll = true }
+                        .disabled(snapshot.tracks.isEmpty || bulkDownloadProgress != nil)
                 }
                 Button("Sync", systemImage: "arrow.triangle.2.circlepath") { Task { await sync() } }.disabled(library == nil || snapshot.isSyncing)
             }
         }
-        .overlay { if snapshot.isSyncing { ProgressView("Syncing Library…") } }
+        .overlay {
+            if let progress = bulkDownloadProgress {
+                VStack(spacing: 12) {
+                    if progress.isClearing {
+                        ProgressView()
+                        Text("Clearing existing downloads…")
+                    } else {
+                        ProgressView(value: Double(progress.completed), total: Double(max(progress.total, 1)))
+                        Text("Downloading \(progress.completed) of \(progress.total)")
+                    }
+                }
+                .font(.callout)
+                .padding()
+                .frame(maxWidth: 280)
+                .background(.regularMaterial, in: RoundedRectangle(cornerRadius: UMusicTheme.cornerRadius))
+            } else if snapshot.isSyncing {
+                ProgressView("Syncing Library…")
+            }
+        }
         .alert("Library Error", isPresented: .constant(errorMessage != nil)) { Button("OK") { errorMessage = nil } } message: { Text(errorMessage ?? "") }
+        .sheet(isPresented: $showsFilters) {
+            LibraryFilterSheet(tracks: snapshot.tracks, language: $language, year: $year)
+        }
+        .confirmationDialog("Download all songs?", isPresented: $confirmsDownloadAll) {
+            Button("Replace All Downloads", role: .destructive) { Task { await downloadAll() } }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("uMusic will stop playback, remove every existing offline song, then download a fresh copy of the full synced library using parallel downloads. Library and learning data are not removed.")
+        }
         .task {
             if let playlists { playlistSummaries = (try? await playlists.playlists()) ?? [] }
             guard let library else { return }
+            await refreshFromCache(using: library)
             for await value in library.snapshots { snapshot = value; if query.isEmpty { searchResults = value.tracks } }
         }
         .task(id: query) {
@@ -100,7 +134,143 @@ struct LibraryScreen: View {
         default: return true
         }
     }
-    private func sync() async { do { try await library?.sync() } catch is CancellationError {} catch { errorMessage = "Your cached library is still available." } }
+    private func sync() async {
+        do {
+            guard let library else { return }
+            try await library.sync()
+            await refreshFromCache(using: library)
+            await playback?.reconcileQueue(availableTracks: snapshot.tracks)
+        } catch is CancellationError {
+        } catch {
+            errorMessage = "Your cached library is still available."
+        }
+    }
+
+    private func refreshFromCache(using library: any LibraryProviding) async {
+        do {
+            let tracks = try await library.browse(.init())
+            snapshot = .init(tracks: tracks, lastSyncAt: snapshot.lastSyncAt, isSyncing: false)
+            if query.isEmpty { searchResults = tracks }
+        } catch {
+            errorMessage = "The local library could not be loaded."
+        }
+    }
+
+    private func downloadAll() async {
+        guard let offline else { return }
+        let tracks = snapshot.tracks
+        guard !tracks.isEmpty else { return }
+        bulkDownloadProgress = .clearing(total: tracks.count)
+        do {
+            await playback?.pause()
+            try await offline.removeAllDownloads()
+            bulkDownloadProgress = .downloading(completed: 0, total: tracks.count)
+
+            let workerCount = min(tracks.count, max(1, ProcessInfo.processInfo.activeProcessorCount))
+            var nextIndex = 0
+            var completed = 0
+            var failures: [String] = []
+            await withTaskGroup(of: String?.self) { group in
+                func enqueueNext() {
+                    guard nextIndex < tracks.count else { return }
+                    let track = tracks[nextIndex]
+                    nextIndex += 1
+                    group.addTask {
+                        do {
+                            try await offline.download(track, retention: .pinned)
+                            return nil
+                        } catch {
+                            return (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
+                        }
+                    }
+                }
+
+                for _ in 0..<workerCount { enqueueNext() }
+                while let failure = await group.next() {
+                    completed += 1
+                    if let failure { failures.append(failure) }
+                    bulkDownloadProgress = .downloading(completed: completed, total: tracks.count)
+                    enqueueNext()
+                }
+            }
+            bulkDownloadProgress = nil
+            if !failures.isEmpty {
+                let succeeded = tracks.count - failures.count
+                errorMessage = "Downloaded \(succeeded) of \(tracks.count) songs. \(failures[0]) Choose Download All to retry a fresh download."
+            }
+        } catch is CancellationError {
+            bulkDownloadProgress = nil
+        } catch {
+            bulkDownloadProgress = nil
+            let detail = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
+            errorMessage = "The existing downloads could not be cleared. \(detail)"
+        }
+    }
+}
+
+private struct LibraryFilterSheet: View {
+    let tracks: [TrackSummary]
+    @Binding var language: String?
+    @Binding var year: Int?
+    @Environment(\.dismiss) private var dismiss
+
+    private var languages: [String] {
+        Set(tracks.map { $0.language ?? "Unknown" }).sorted()
+    }
+
+    private var years: [Int] {
+        Set(tracks.compactMap(\.releaseYear)).sorted(by: >)
+    }
+
+    var body: some View {
+        NavigationStack {
+            List {
+                Section("Language") {
+                    selectionRow("All languages", selected: language == nil) { language = nil }
+                    ForEach(languages, id: \.self) { value in
+                        selectionRow(value, selected: language == value) { language = value }
+                    }
+                }
+                Section("Release Year") {
+                    selectionRow("All years", selected: year == nil) { year = nil }
+                    ForEach(years, id: \.self) { value in
+                        selectionRow(String(value), selected: year == value) { year = value }
+                    }
+                }
+            }
+            .navigationTitle("Library Filters")
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Reset") { language = nil; year = nil }
+                        .disabled(language == nil && year == nil)
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") { dismiss() }
+                }
+            }
+        }
+    }
+
+    private func selectionRow(_ title: String, selected: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack {
+                Text(title).foregroundStyle(.primary)
+                Spacer()
+                if selected { Image(systemName: "checkmark").foregroundStyle(Color.accentColor) }
+            }
+            .contentShape(Rectangle())
+        }
+        .accessibilityAddTraits(selected ? .isSelected : [])
+    }
+}
+
+private struct BulkDownloadProgress {
+    let completed: Int
+    let total: Int
+    let isClearing: Bool
+
+    static func clearing(total: Int) -> Self { .init(completed: 0, total: total, isClearing: true) }
+    static func downloading(completed: Int, total: Int) -> Self { .init(completed: completed, total: total, isClearing: false) }
 }
 
 struct TrackListView: View {
@@ -162,6 +332,7 @@ private struct DownloadedTracksView: View {
     var body: some View {
         TrackListView(tracks: tracks, playback: playback, offline: offline, playlists: nil, playlistSummaries: [])
             .task { if let offline { snapshot = await offline.storageSnapshot() } }
+            .refreshable { if let offline { snapshot = await offline.storageSnapshot() } }
     }
 }
 
@@ -198,6 +369,7 @@ struct PlaylistBrowser: View {
             }
         }
         .task { await reload() }
+        .refreshable { await reload() }
         .alert("Playlist Conflict", isPresented: .constant(errorMessage != nil)) { Button("Reload") { errorMessage = nil; Task { await reload() } } } message: { Text(errorMessage ?? "") }
     }
     private func reload() async { summaries = (try? await playlists?.playlists()) ?? [] }
@@ -220,10 +392,22 @@ struct SearchScreen: View {
         }
         .navigationTitle("Search").searchable(text: $query, isPresented: $searchPresented, prompt: "Songs, artists, albums, genres")
         .scrollDismissesKeyboard(.interactively)
+        .refreshable { await refresh() }
         .task { playlistSummaries = (try? await playlists?.playlists()) ?? [] }
         .task(id: query) {
             do { try await Task.sleep(for: .milliseconds(250)); try Task.checkCancellation(); results = try await library?.browse(.init(text: query)) ?? [] }
             catch is CancellationError {} catch { results = [] }
+        }
+    }
+
+    private func refresh() async {
+        do {
+            try await library?.sync()
+            results = try await library?.browse(.init(text: query)) ?? []
+            playlistSummaries = (try? await playlists?.playlists()) ?? []
+        } catch is CancellationError {
+        } catch {
+            results = (try? await library?.browse(.init(text: query))) ?? results
         }
     }
 }

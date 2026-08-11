@@ -46,7 +46,7 @@ final class ShareViewController: UIViewController {
         sendButton.isEnabled = false
         Task {
             do {
-                let handoff = try AppGroupImportHandoff(suiteName: "group.uk.muzammilpeer.umusic.v2")
+                let handoff = try AppGroupImportHandoff(suiteName: "group.uk.muzammilpeer.umusic")
                 try await handoff.enqueue(request)
                 await MainActor.run { extensionContext?.completeRequest(returningItems: nil) }
             } catch {

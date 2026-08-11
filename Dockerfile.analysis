@@ -1,0 +1,11 @@
+FROM umusic-web:latest
+
+USER root
+RUN pip install --no-cache-dir \
+    "numpy==2.2.6" \
+    "torch==2.8.0" \
+    "transformers==4.55.4" \
+    "safetensors==0.6.2"
+USER umusic
+
+CMD ["celery", "-A", "config", "worker", "--loglevel=INFO", "--queues=audio_analysis", "--concurrency=1", "--prefetch-multiplier=1"]

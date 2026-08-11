@@ -5,6 +5,26 @@ Platforms: iPhone first; iPad and macOS compatible
 UI: SwiftUI  
 Core delivery: `UMusicCore.xcframework` plus a thin `UMusicApp` integration target
 
+## Open and run the Apple apps
+
+Open `Apps/UMusicApp/UMusicApp.xcodeproj`, not `Package.swift`. Select the `UMusic`
+scheme for iPhone, iPad, or macOS, or `UMusicDataInspector` for the macOS inspector.
+The Swift package contains framework/library products only; application and extension
+bundle identifiers, Info.plists, signing, capabilities, and embedding belong to the
+Xcode host project.
+
+| Bundle | Identifier |
+|---|---|
+| iPhone/iPad/macOS app | `uk.muzammilpeer.umusic.v2` |
+| Share Extension | `uk.muzammilpeer.umusic.v2.share` |
+| macOS Data Inspector | `uk.muzammilpeer.umusic.v2.inspector` |
+| App Group | `group.uk.muzammilpeer.umusic.v2` |
+| Shared Keychain suffix | `uk.muzammilpeer.umusic.v2.shared` |
+
+Swift package framework products are static libraries/modules and therefore are not
+independently launched bundles. SwiftPM generates the internal `UMusicCore` resource
+bundle identifier when it embeds framework resources in the host application.
+
 uMusic 2.0 is a private, self-hosted, offline-first music experience built around one primary action: **Start Listening**. The server supplies authenticated library, playlist, artwork, and audio data. The Apple client owns playback, observation, privacy controls, local learning, prediction, queue construction, offline storage, and restoration.
 
 Development status: Sprint 2 authentication and onboarding are implemented on the Sprint 1 architecture. XCFramework packaging, signed-host integration, and live `/api/v2` server validation remain open. See [Documentation/Sprints/Sprint-2/REPORT.md](Documentation/Sprints/Sprint-2/REPORT.md).

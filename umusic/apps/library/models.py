@@ -106,6 +106,7 @@ class Track(models.Model):
     genres = models.JSONField(default=list, blank=True)
     energy = models.DecimalField(max_digits=3, decimal_places=2, null=True, blank=True)
     content_classifications = models.JSONField(default=list, blank=True)
+    external_metadata = models.JSONField(default=dict, blank=True)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -115,6 +116,36 @@ class Track(models.Model):
 
     def __str__(self) -> str:
         return f"{self.artist.name} — {self.title}"
+
+
+class TrackAnalysis(models.Model):
+    class Status(models.TextChoices):
+        PENDING = "pending", "Pending"
+        RUNNING = "running", "Running"
+        SUCCEEDED = "succeeded", "Succeeded"
+        RETRYABLE_FAILURE = "retryable_failure", "Retryable failure"
+        PERMANENT_FAILURE = "permanent_failure", "Permanent failure"
+        SUPERSEDED = "superseded", "Superseded"
+        CANCELLED = "cancelled", "Cancelled"
+
+    track = models.OneToOneField(Track, on_delete=models.CASCADE, related_name="analysis")
+    source_checksum = models.CharField(max_length=64)
+    provider = models.CharField(max_length=64)
+    model_version = models.CharField(max_length=128)
+    feature_schema_version = models.PositiveSmallIntegerField(default=1)
+    status = models.CharField(max_length=32, choices=Status.choices, default=Status.PENDING)
+    attempt_count = models.PositiveIntegerField(default=0)
+    scalar_features = models.JSONField(default=dict, blank=True)
+    embedding_dimension = models.PositiveSmallIntegerField(default=0)
+    embedding_encoding = models.CharField(max_length=32, default="float16_le")
+    embedding = models.BinaryField(blank=True, default=bytes)
+    error_code = models.CharField(max_length=64, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        indexes = [models.Index(fields=["status", "updated_at"], name="library_analysis_status_idx")]
 
 
 class LibraryMembership(models.Model):

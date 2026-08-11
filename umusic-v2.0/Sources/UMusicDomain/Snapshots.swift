@@ -11,14 +11,15 @@ public struct TrackSummary: Codable, Equatable, Hashable, Sendable, Identifiable
     public let releaseYear: Int?
     public let revision: Int64?
     public let contentClassifications: [ContentClassification]?
+    public let songFeatures: SongFeatureSnapshot?
 
-    public init(id: UUID, title: String, artist: String, durationSeconds: Double? = nil, album: String? = nil, genres: [String]? = nil, language: String? = nil, releaseYear: Int? = nil, revision: Int64? = nil, contentClassifications: [ContentClassification]? = nil) {
+    public init(id: UUID, title: String, artist: String, durationSeconds: Double? = nil, album: String? = nil, genres: [String]? = nil, language: String? = nil, releaseYear: Int? = nil, revision: Int64? = nil, contentClassifications: [ContentClassification]? = nil, songFeatures: SongFeatureSnapshot? = nil) {
         self.id = id
         self.title = title
         self.artist = artist
         self.durationSeconds = durationSeconds
         self.album = album; self.genres = genres; self.language = language
-        self.releaseYear = releaseYear; self.revision = revision; self.contentClassifications = contentClassifications
+        self.releaseYear = releaseYear; self.revision = revision; self.contentClassifications = contentClassifications; self.songFeatures = songFeatures
     }
 }
 
@@ -130,6 +131,15 @@ public struct PlaybackTicket: Codable, Equatable, Sendable {
     public init(trackID: UUID, url: URL, expiresAt: Date, checksum: String, bytes: Int64, supportsRanges: Bool) {
         self.trackID = trackID; self.url = url; self.expiresAt = expiresAt
         self.checksum = checksum; self.bytes = bytes; self.supportsRanges = supportsRanges
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case trackID = "track_id"
+        case url
+        case expiresAt = "expires_at"
+        case checksum
+        case bytes
+        case supportsRanges = "supports_ranges"
     }
 }
 

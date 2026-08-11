@@ -58,6 +58,7 @@ struct NowScreen: View {
     let playback: (any PlaybackControlling)?
     let snapshot: PlaybackSnapshot
     let context: (any ContextManaging)?
+    let dismissToHome: () -> Void
     @State private var scrubPosition = 0.0
     @State private var isScrubbing = false
     @State private var showsVisualizer = false
@@ -110,6 +111,18 @@ struct NowScreen: View {
                 ContentUnavailableView("Nothing Playing", systemImage: "play.circle", description: Text("Choose music from Library."))
             }
         }
+        .toolbar {
+            ToolbarItem(placement: .automatic) {
+                Button("Back to Home", systemImage: "chevron.down") { dismissToHome() }
+                    .labelStyle(.iconOnly)
+            }
+        }
+        .simultaneousGesture(
+            DragGesture(minimumDistance: 30).onEnded { value in
+                let isMostlyVertical = abs(value.translation.height) > abs(value.translation.width)
+                if isMostlyVertical && value.translation.height > 100 { dismissToHome() }
+            }
+        )
         .navigationTitle("Now")
         .scrollDismissesKeyboard(.interactively)
         .onChange(of: snapshot.positionSeconds) { _, value in if !isScrubbing { scrubPosition = value } }

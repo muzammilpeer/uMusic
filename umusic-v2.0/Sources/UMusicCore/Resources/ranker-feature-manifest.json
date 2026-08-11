@@ -1,8 +1,10 @@
 {
-  "schemaVersion": 1,
-  "featureVersion": "ranker-features-1",
-  "modelVersion": "uninstalled",
-  "orderedFeatures": [
+  "featureVersion" : "ranker-features-1",
+  "maximumBatchSize" : 200,
+  "minimumOSMajorVersion" : 17,
+  "modelSHA256" : "a8a08384b011f01813b970009d1722f28a68faaa84197880d79983ba6ba41197",
+  "modelVersion" : "coldstart-prior-1",
+  "orderedFeatures" : [
     "heuristic_score",
     "completion_rate",
     "skip_rate",
@@ -12,10 +14,8 @@
     "local_hour_cos",
     "release_year_scaled"
   ],
-  "minimumOSMajorVersion": 14,
-  "maximumBatchSize": 200,
-  "timeoutMilliseconds": 50,
-  "modelSHA256": "",
-  "signature": "",
-  "publicKeyID": ""
+  "publicKeyID" : "umusic-coldstart-1",
+  "schemaVersion" : 1,
+  "signature" : "hgafvufG1KZXGSz8k+bEVO+NPKbUJJT6VHo4ju6lEeapOmpEO/iDLvwCjGDQBeQ6tqa9bGbtfChBRULdS4hnAw==",
+  "timeoutMilliseconds" : 50
 }

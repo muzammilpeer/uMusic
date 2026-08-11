@@ -9,9 +9,9 @@ from django.urls import reverse
 from mutagen.mp3 import MP3
 
 from umusic.apps.accounts.models import User
-from umusic.apps.imports.adapter_services import import_taste, import_youtube
+from umusic.apps.imports.adapter_services import _ingest_path, import_taste, import_youtube
 from umusic.apps.imports.adapters import enabled_adapters, resolve_import_path
-from umusic.apps.imports.models import TasteCandidate
+from umusic.apps.imports.models import AdapterJob, TasteCandidate
 from umusic.apps.imports.remote_services import (
     _inject_youtube_id3,
     create_remote_import,
@@ -218,6 +218,18 @@ def test_remote_batch_is_queued_and_records_per_item_results(
     assert job.status == "completed"
     assert job.imported_count == 2
     assert not job.remote_items.exclude(status="completed").exists()
+
+
+@pytest.mark.django_db
+def test_ingest_path_raises_when_inner_mp3_import_fails(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    owner = User.objects.create_user(username="failed-inner-import")
+    path = tmp_path / "song.mp3"
+    path.write_bytes(b"not-an-mp3")
+
+    with pytest.raises(RuntimeError, match="INVALID_AUDIO_FORMAT"):
+        _ingest_path(path, owner)
 
 
 @pytest.mark.django_db

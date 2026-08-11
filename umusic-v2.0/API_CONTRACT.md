@@ -88,6 +88,18 @@ Returns server identity, API/schema versions, user-safe capabilities, library re
       "instrumental_probability": 0.08,
       "speech_probability": 0.81
     },
+    "song_features": {
+      "schema_version": 1,
+      "provider": "approved-provider",
+      "model_version": "model-and-projection-version",
+      "analysis_revision": 18491000001,
+      "scalars": {"energy": 0.31},
+      "embedding": {
+        "encoding": "float16_le",
+        "dimension": 64,
+        "payload": "base64-encoded-bounded-vector"
+      }
+    },
     "artwork": {"id": "sha256", "etag": "etag"},
     "audio": {"id": "sha256", "bytes": 6543210, "mime_type": "audio/mpeg", "bitrate_kbps": 256},
     "available": true
@@ -95,6 +107,13 @@ Returns server identity, API/schema versions, user-safe capabilities, library re
   "tombstones": [{"track_id": "uuid", "revision": 19, "deleted_at": "2026-08-08T10:00:00Z"}]
 }
 ```
+
+`song_features` is optional and machine-oriented. The embedding is stored separately from
+ID3 metadata and is accepted by the client only for supported schema, encoding, dimension,
+payload-size, and finite-scalar values. Missing analysis never makes a track unavailable.
+The server emits a completed analysis only when its source checksum still matches the
+current audio file. Personal listening history and preference aggregates are not part of
+this response.
 
 `content_classifications` is optional, explicit server metadata. Supported Sprint 12
 categories are `quran`, `quranTranslation`, and `religious`; confidence is clamped to

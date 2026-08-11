@@ -1,5 +1,6 @@
 import hashlib
 import json
+import logging
 import re
 import shutil
 import subprocess
@@ -47,6 +48,8 @@ from umusic.apps.library.storage import (
     get_storage_for_backend,
     sha256_file,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class ImportFailure(RuntimeError):
@@ -451,6 +454,7 @@ def process_import(job: ImportJob, storage: MediaStorage | None = None) -> Impor
             storage.delete(created_artwork[0])
         return _fail_job(job, ImportFailure("STORAGE_ERROR", "Unable to store the uploaded MP3."))
     except Exception:
+        logger.exception("Unexpected MP3 import failure", extra={"import_job_id": str(job.id)})
         if created_audio_key:
             storage.delete(created_audio_key)
         if created_artwork and created_artwork[1]:

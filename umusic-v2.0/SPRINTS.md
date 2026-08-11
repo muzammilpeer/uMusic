@@ -157,6 +157,29 @@ Exit: budgets and security checklist pass on minimum device; migration is copy-f
 
 Exit: release gates in `PROJECT_PLAN.md` pass and known limitations are documented.
 
+## Phase 6 — Private music intelligence
+
+### Sprint 20: Mac music analysis and private on-device personalization
+
+- Add a versioned, asynchronous Mac mini analysis pipeline that derives compact audio
+  features from each MP3 without placing inference on the Django request path.
+- Persist model provenance, source checksum, analysis status, confidence-bearing tags,
+  and a compact embedding separately from human-readable ID3 metadata.
+- Extend the explicit library sync contract so the iPhone receives bounded song features
+  without receiving model internals or triggering automatic catalog synchronization.
+- Extend the iOS recommendation boundary with a bundled Core ML base ranker and a local
+  contextual preference learner driven by privacy-preserving semantic telemetry.
+- Preserve deterministic heuristic fallback, manual queue priority, offline playback,
+  explicit Ramadan preference, retention/reset behavior, and user-controlled export.
+- Establish a reproducible training/evaluation path for a future uMusic-owned Core ML
+  model without coupling the app to MERT, Apple Intelligence, or one model format.
+
+Exit: newly analyzed tracks synchronize compact versioned features; an offline iPhone can
+rank its cached catalog using only local context/history; technical failures never become
+negative preference labels; model or feature failures fall back without delaying playback;
+and model licensing, provenance, latency, storage, energy, migration, and privacy gates are
+evidenced in the sprint report.
+
 ## Definition of done for every sprint
 
 - Acceptance criteria have automated tests where technically possible.
@@ -385,4 +408,51 @@ Execute Sprint 19 as stabilization and release preparation. Freeze public framew
 Do not add new product scope. Fix release blockers with targeted tests; defer non-blockers transparently. Beta feedback collection must be opt-in and must not upload raw personal learning, location, HealthKit, or listening timelines.
 
 Release only when every PROJECT_PLAN release gate is evidenced in the report, all supported platforms build, migrations and rollback pass, crash/playback/energy targets are met, no critical security/privacy issue remains, and the user accepts documented limitations.
+```
+
+### Sprint 20 prompt — Mac analysis and private iPhone recommendations
+
+```text
+Execute Sprint 20 as a coordinated backend-and-Apple-client vertical slice. This sprint explicitly authorizes narrowly scoped changes in /Users/muzammilpeer/Git/uMusic/umusic-v2.0 plus the Django backend under /Users/muzammilpeer/Git/uMusic/umusic/apps, required config/Celery wiring, API contract tests, and Docker worker configuration. Do not modify the v1 Apple client. Preserve all production media, database volumes, credentials, listening history, and unrelated worktree edits.
+
+Before downloading model code or weights, create a model-provenance and licensing gate recording the exact repository, revision, weight artifact, checksum, code license, weight license, intended private/noncommercial or commercial use, redistribution constraints, and approval status. Treat repository-code and checkpoint licenses as separate facts. Do not commit model weights, generated embeddings from the user's real library, private MP3 excerpts, credentials, or production telemetry. The implementation must work with a deterministic fake analyzer until an approved weight artifact is installed outside Git. Make the analyzer provider-neutral so MERT can be replaced later. Any command that installs dependencies, downloads weights, analyzes production audio, migrates production data, or deploys services requires explicit operational authorization and must not be implied by this planning sprint.
+
+Backend workstream:
+
+1. Define a versioned TrackAnalysis domain contract and persistence migration containing track ID, source-audio checksum/revision, provider/model/version, feature-schema version, status, attempt count, timestamps, structured error code, scalar audio descriptors with confidence, embedding dimension/encoding, and compact embedding payload. Store machine vectors outside ID3; allow only reviewed human-readable fields to be copied into ID3. Never overwrite curated metadata solely from a low-confidence prediction.
+2. Implement an idempotent Celery analysis state machine for pending, running, succeeded, retryable failure, permanent failure, superseded, and cancelled states. The Django web process only enqueues/statuses work. A dedicated Mac-compatible worker analyzes bounded decoded excerpts, enforces duration/memory/time limits, verifies the source checksum before commit, coalesces duplicate jobs, retries with backoff, and discards stale results when audio changes.
+3. Introduce an AudioAnalysisProvider protocol plus deterministic fake/reference provider. Add an optional MERT adapter that performs sample-rate normalization, segment selection, temporal pooling, L2 normalization, dimensionality reduction to a versioned 64- or 128-component representation, Float16 or equivalently bounded encoding, and confidence-calibrated tag heads. Do not claim MERT directly supplies BPM, genre, mood, language, religious classification, or valence unless a separately identified trained head or deterministic extractor actually supplies that output.
+4. Add administrative status/requeue controls and a safe backfill command supporting dry-run, limit, explicit track IDs, resumable batches, and no destructive reset. Include counts for pending/succeeded/failed/superseded and structured redacted diagnostics; never log filesystem paths, audio content, tokens, or embeddings.
+5. Extend the versioned catalog/sync response with a bounded optional song-feature object: schema version, model family/version, normalized scalar descriptors, compact embedding encoding/dimension/payload, confidences, and analysis revision. Old clients ignore it; new clients accept missing/unknown versions and preserve the last compatible feature until a newer compatible revision commits atomically. Enforce multi-user library authorization and response-size limits.
+6. Add backend tests for migrations, state transitions, duplicate jobs, changed checksums, cancellation, corrupt/oversized audio, provider timeout/OOM mapping, retry exhaustion, low-confidence metadata protection, authorization isolation, cursor pagination, response bounds, old-client compatibility, and deterministic fake-provider output. Measure analysis throughput and worker peak memory on representative synthetic fixtures, not private production music.
+
+Apple-client workstream:
+
+1. Add immutable Sendable SongFeatureSnapshot types and a versioned local persistence migration. Decode features defensively, reject invalid dimensions/non-finite values/oversized payloads, atomically associate compatible revisions with catalog tracks, preserve catalog usability when features are missing, and expose storage/version diagnostics without exposing raw private history.
+2. Keep RecommendationEngine as the stable boundary. Implement a hybrid PrivateRecommendationEngine composed of the existing deterministic heuristic candidate generator and policy constraints, a bundled Core ML base-ranker provider, and a local contextual preference learner. Apple Intelligence/Foundation Models may later provide optional natural-language intent, but must not be required for scoring, playback, training, or fallback in this sprint.
+3. Define one documented feature manifest shared by training and Swift inference. Candidate inputs include bounded song embedding projections and available metadata plus hour bucket, weekday, explicit activity, audio-route category, Ramadan preference state, recency, exposure, completion/skip/manual-selection aggregates, and similarity to recent tracks. Missing or denied signals use explicit unknown values. Never use raw coordinates, raw HealthKit samples, accessory identifiers, credentials, or server URL as model inputs.
+4. Derive preference labels only from semantic events: explicit like/dislike, manual selection, replay, meaningful completion, early voluntary skip, and queue removal. Exclude stream/download failures, interruptions, phone calls, route loss, unavailable media, background termination, and other technical failures. Version label policy and retain the source event ID so aggregation is idempotent.
+5. Implement the local learner as a bounded, explainable contextual-bandit/affinity layer that can update cheaply after semantic events. Persist compact sufficient statistics rather than replaying all raw history for every recommendation. Respect the configured retention period: raw-event expiry may update non-reconstructable aggregates, while Reset Learning deletes raw observations, aggregates, learner state, and personalized model artifacts. Batch writes under the existing Low Energy policy.
+6. Combine base-model, personal-affinity, exploration, freshness, diversity, offline-availability, and policy scores using a versioned configuration. Reduce exploration during workouts or short manual queues; cap artist/album repetition; never reorder manual items; and never override explicit playlist or Ramadan choices. Produce reason codes from actual score components rather than LLM-generated explanations.
+7. Run inference off the main actor with cancellation, candidate and latency limits, non-finite validation, canary prediction, model-version tracing, and immediate heuristic fallback. Training/update work runs only in bounded batches under user-visible policy, preferably while charging and not during playback/workout; inference must remain available while an update is prepared. Activate a candidate only after local evaluation and retain one rollback artifact.
+8. Add fully local export support for the feature schema, label-policy version, model/version metrics, and opt-in sanitized training rows. Sanitized export excludes credentials, endpoints, precise location, raw health data, accessory identity, and reconstructable private timelines. No automatic upload is introduced.
+9. Test zero-history cold start, missing/incompatible song features, malformed embeddings, all-unknown context, semantic positive/negative labels, technical-failure exclusion, duplicate events, retention/reset, manual queue precedence, Ramadan preference precedence, offline-only catalogs, deterministic seeded exploration, main-thread isolation, timeout/fallback, corrupt Core ML resources, candidate activation/rollback, and 25,000-track bounds. Add chronological evaluation fixtures that prevent temporal leakage and report ranking quality against the Sprint 11 heuristic baseline.
+
+Training and future-model workstream:
+
+1. Add a reproducible, local-only dataset builder that joins approved song features with exported semantic labels using stable pseudonymous track identifiers. Split chronologically by listening session; never randomly split events from one session across train and evaluation sets.
+2. Establish baseline evaluations for heuristic-only, base Core ML only, local learner only, and hybrid ranking. Report at minimum Recall@K/NDCG@K where labels permit, voluntary-skip rate, completion lift, catalog coverage, repetition, calibration, cold-start quality, inference p50/p95, peak memory, storage, and energy observations.
+3. Keep the training implementation replaceable: a future LightFM, gradient-boosted, neural, or uMusic-owned model may produce the same versioned Core ML input/output contract. LightFM is an offline experiment/training tool, not an iOS runtime dependency. Do not add an LLM to the per-track ranking loop.
+
+Acceptance and validation:
+
+- Fresh and migrated databases pass forward migration and rollback-safety review without deleting analysis/history data.
+- The fake analyzer completes the entire upload/enqueue/analyze/persist/sync/decode flow deterministically in automated tests.
+- An approved optional MERT installation, if separately authorized, processes a non-private fixture and records exact provenance; otherwise the report clearly leaves that adapter disabled without blocking the rest of the sprint.
+- A device with no network after catalog sync can Start Listening, refill, relaunch, and rank cached songs using local features/history only.
+- Removing/corrupting the Core ML artifact or returning malformed song features produces a measured heuristic fallback and no playback failure.
+- Reset Learning and retention behavior are verified across raw events, aggregates, learner state, exports, and model artifacts.
+- Swift package tests, iOS/macOS builds, architecture/API compatibility checks, backend unit/contract tests, Django checks, migration checks, and Docker configuration validation pass. Deployment is a separate explicitly authorized action.
+
+Finish with Documentation/Sprints/Sprint-20/REPORT.md containing the acceptance-criterion checklist, architecture decisions, model/license provenance, schema/API migrations, operational installation steps, privacy impact, performance and evaluation tables, exact commands/results, deployment status, unresolved risks, and recommended follow-up. Do not call the sprint complete if production weights were assumed, private data was silently processed, fallback was untested, or offline ranking depends on Apple Intelligence or the network.
 ```

@@ -61,6 +61,61 @@ public actor PlaybackCoordinator: PlaybackControlling {
         await replaceQueue(tracks, startingAt: index, origin: .automatic)
     }
 
+    public func reconcileQueue(availableTracks: [TrackSummary]) async {
+        let available = Dictionary(uniqueKeysWithValues: availableTracks.map { ($0.id, $0) })
+        let currentTrackID = queue[safe: index]?.track.id
+        let reconciled = queue.compactMap { item -> QueueItem? in
+            guard let track = available[item.track.id] else { return nil }
+            return QueueItem(id: item.id, track: track, origin: item.origin)
+        }
+
+        guard !reconciled.isEmpty else {
+            await clearQueue()
+            return
+        }
+
+        queue = reconciled
+        if let currentTrackID, let retainedIndex = queue.firstIndex(where: { $0.track.id == currentTrackID }) {
+            index = retainedIndex
+            emit()
+            await persist()
+            return
+        }
+
+        index = min(index, queue.count - 1)
+        wantsPlayback = false
+        position = 0
+        pendingSeek = nil
+        await engine.pause()
+        await prepareCurrent()
+        await persist()
+    }
+
+    private func clearQueue() async {
+        if learningTrackID != nil {
+            await learning?.record(.ended(positionSeconds: position, durationSeconds: duration, reason: .replaced))
+        }
+        preparationID = UUID()
+        queue = []
+        index = 0
+        phase = .idle
+        position = 0
+        duration = nil
+        wantsPlayback = false
+        resumeAfterInterruption = false
+        failureMessage = nil
+        sourceIdentity = .unknown
+        pendingSeek = nil
+        lastCheckpointPosition = 0
+        isPrepared = false
+        learningTrackID = nil
+        await engine.pause()
+        await engine.configure(track: nil) { command in Task { await self.handle(command) } }
+        await cache.setCurrentlyPlaying(trackID: nil)
+        try? await snapshotStore.remove()
+        emit()
+    }
+
     private func replaceQueue(_ tracks: [TrackSummary], startingAt index: Int, origin: QueueItemOrigin) async {
         guard tracks.indices.contains(index) else { return }
         if learningTrackID != nil { await learning?.record(.ended(positionSeconds: position, durationSeconds: duration, reason: .replaced)); learningTrackID = nil }
@@ -121,6 +176,8 @@ public actor PlaybackCoordinator: PlaybackControlling {
     }
 
     public func checkpoint() async { await learning?.record(.checkpoint(positionSeconds: position, durationSeconds: duration)); await learning?.flush(); await persist() }
+
+    public func currentSnapshot() -> PlaybackSnapshot { makeSnapshot() }
 
     public func play() async {
         wantsPlayback = true

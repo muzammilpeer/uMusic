@@ -27,7 +27,7 @@ public enum ResearchPackageWriter {
         let exportRoot = root.appending(path: "uMusicResearchExports", directoryHint: .isDirectory)
         try manager.createDirectory(at: exportRoot, withIntermediateDirectories: true, attributes: [.protectionKey: FileProtectionType.complete])
         let estimated = Int64(max(records.events.count + records.observations.count + records.contexts.count + records.tracks.count, 1)) * 1_024
-        let available = availableCapacityBytes ?? ((try? exportRoot.resourceValues(forKeys: [.volumeAvailableCapacityForImportantUsageKey]).volumeAvailableCapacityForImportantUsage) ?? Int64.max)
+        let available = availableCapacityBytes ?? availableCapacity(at: exportRoot)
         guard available > estimated + 1_048_576 else { throw ResearchExportError.insufficientDisk }
         let package = exportRoot.appending(path: "umusic-\(kind.rawValue)-\(UUID().uuidString).umusicresearch", directoryHint: .isDirectory)
         try manager.createDirectory(at: package, withIntermediateDirectories: false, attributes: [.protectionKey: FileProtectionType.complete])
@@ -95,6 +95,16 @@ public enum ResearchPackageWriter {
     }
 
     private static func protectedWrite(_ data: Data, to url: URL) throws { try data.write(to: url, options: [.atomic, .completeFileProtection]); try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: url.path) }
+    private static func availableCapacity(at url: URL) -> Int64 {
+        if let value = try? url.resourceValues(forKeys: [.volumeAvailableCapacityForImportantUsageKey]).volumeAvailableCapacityForImportantUsage,
+           value > 0 { return value }
+        if let value = try? url.resourceValues(forKeys: [.volumeAvailableCapacityKey]).volumeAvailableCapacity,
+           value > 0 { return Int64(value) }
+        if let value = try? FileManager.default.attributesOfFileSystem(forPath: url.path)[.systemFreeSize] as? NSNumber {
+            return value.int64Value
+        }
+        return 0
+    }
     private static let encoder: JSONEncoder = { let value = JSONEncoder(); value.dateEncodingStrategy = .iso8601; value.outputFormatting = [.sortedKeys, .withoutEscapingSlashes]; return value }()
 }
 

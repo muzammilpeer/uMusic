@@ -9,8 +9,9 @@ from umusic.apps.library.models import (
     ImportJob,
     LibraryMembership,
     Track,
+    TrackAnalysis,
 )
 
 admin.site.register(
-    [Artist, Album, Artwork, AudioFile, Track, LibraryMembership, ImportJob, AuditEvent]
+    [Artist, Album, Artwork, AudioFile, Track, TrackAnalysis, LibraryMembership, ImportJob, AuditEvent]
 )

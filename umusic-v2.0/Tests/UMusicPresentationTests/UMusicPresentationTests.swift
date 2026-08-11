@@ -3,6 +3,44 @@ import Testing
 import UMusicCore
 @testable import UMusicPresentation
 
+private actor RestoringAuthenticationStub: AuthenticationManaging {
+    nonisolated let snapshots: AsyncStream<AuthenticationState>
+    private let continuation: AsyncStream<AuthenticationState>.Continuation
+    private let user = AuthenticatedUser(id: UUID(), displayName: "Listener")
+    private let server = ServerConfiguration(baseURL: URL(string: "https://music.example")!)
+
+    init() {
+        let stream = AsyncStream<AuthenticationState>.makeStream()
+        snapshots = stream.stream
+        continuation = stream.continuation
+        continuation.yield(.signedOut)
+    }
+
+    func restore() async {
+        continuation.yield(.authenticated(user: user, server: server, persistsSession: true))
+        continuation.finish()
+    }
+    func connect(serverURL: String, username: String, password: String, keepSignedIn: Bool, allowsInsecureLocalhost: Bool) async {}
+    func validAccessToken() async throws -> String { "token" }
+    func currentServer() async throws -> ServerConfiguration { server }
+    func logout(localData: LogoutLocalDataDisposition) async {}
+}
+
+@MainActor
+@Test("Persisted authentication stays behind launch loading until restoration resolves")
+func restoredAuthenticationDoesNotExposeSignedOutUI() async {
+    let model = AuthenticationViewModel(authentication: RestoringAuthenticationStub())
+    #expect(model.isRestoringSession)
+
+    await model.observe()
+
+    #expect(!model.isRestoringSession)
+    guard case .authenticated = model.state else {
+        Issue.record("Expected the restored authenticated state")
+        return
+    }
+}
+
 @MainActor
 @Test("Each tab keeps an independent typed navigation history")
 func independentNavigationPaths() {
@@ -124,8 +162,11 @@ func homeMixPerformance() {
         TrackSummary(id: UUID(), title: "Song \(index)", artist: "Artist", genres: [index.isMultiple(of: 2) ? "Rock" : "Jazz"], releaseYear: 1980 + index % 45)
     }
     let clock = ContinuousClock()
-    let elapsed = clock.measure { _ = HomeStarterMix.make(from: tracks) }
+    var mixes: [HomeStarterMix] = []
+    let elapsed = clock.measure { mixes = HomeStarterMix.make(from: tracks) }
     #expect(elapsed < .seconds(2))
+    #expect(mixes.first?.title == "All Music")
+    #expect(mixes.first?.tracks.count == tracks.count)
 }
 
 @Test("Home keeps privacy, offline launch, and mini-player layout contracts")
@@ -133,7 +174,7 @@ func homeSourceContracts() throws {
     let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
     let home = try String(contentsOf: root.appending(path: "Sources/UMusicPresentation/Screens/HomeScreen.swift"), encoding: .utf8)
     let shell = try String(contentsOf: root.appending(path: "Sources/UMusicPresentation/AppShellView.swift"), encoding: .utf8)
-    #expect(!home.contains(".sync()"))
+    #expect(home.contains(".refreshable"))
     #expect(!home.localizedCaseInsensitiveContains("latitude"))
     #expect(!home.localizedCaseInsensitiveContains("longitude"))
     #expect(home.contains("LazyVStack"))

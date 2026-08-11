@@ -41,6 +41,36 @@ public final class CatalogStore: @unchecked Sendable {
         }
     }
 
+    public func resetCursor() async throws {
+        try await ready.value
+        try await container.performBackgroundTask { context in
+            let request = NSFetchRequest<NSManagedObject>(entityName: "SyncState")
+            request.fetchLimit = 1
+            guard let state = try context.fetch(request).first else { return }
+            state.setValue(nil, forKey: "cursor")
+            try context.save()
+        }
+    }
+
+    /// Hides catalog entries that were not present in a completed full server refresh.
+    /// Track rows are retained so listening history and a later reappearance remain safe.
+    public func reconcileFullCatalog(serverTrackIDs: Set<UUID>) async throws {
+        try await ready.value
+        try await container.performBackgroundTask { context in
+            let request = NSFetchRequest<NSManagedObject>(entityName: "Track")
+            request.predicate = NSPredicate(format: "available == YES")
+            request.fetchBatchSize = 500
+            var changed = false
+            for object in try context.fetch(request) {
+                guard let id = object.value(forKey: "id") as? UUID,
+                      !serverTrackIDs.contains(id) else { continue }
+                object.setValue(false, forKey: "available")
+                changed = true
+            }
+            if changed { try context.save() }
+        }
+    }
+
     public func apply(_ page: LibraryChangePage, syncedAt: Date = Date()) async throws {
         try await ready.value
         try Self.validate(page)
@@ -68,6 +98,9 @@ public final class CatalogStore: @unchecked Sendable {
                 object.setValue(track.durationMilliseconds, forKey: "durationMilliseconds")
                 object.setValue(track.available, forKey: "available")
                 object.setValue(track.contentClassifications.flatMap { try? JSONEncoder().encode($0) }, forKey: "contentClassifications")
+                if let songFeatures = track.songFeatures {
+                    object.setValue(try? JSONEncoder().encode(songFeatures), forKey: "songFeatures")
+                }
             }
             for tombstone in page.tombstones {
                 let object = objects[tombstone.trackID] ?? NSEntityDescription.insertNewObject(forEntityName: "Track", into: context)
@@ -128,7 +161,8 @@ public final class CatalogStore: @unchecked Sendable {
         let storedYear = object.value(forKey: "releaseYear") as? NSNumber
         let revision = object.value(forKey: "revision") as? NSNumber
         let classifications = (object.value(forKey: "contentClassifications") as? Data).flatMap { try? JSONDecoder().decode([ContentClassification].self, from: $0) }
-        return TrackSummary(id: id, title: title, artist: object.value(forKey: "artist") as? String ?? "Unknown Artist", durationSeconds: duration, album: object.value(forKey: "album") as? String, genres: genres, language: object.value(forKey: "language") as? String, releaseYear: storedYear.map(\.intValue), revision: revision.map(\.int64Value), contentClassifications: classifications)
+        let songFeatures = (object.value(forKey: "songFeatures") as? Data).flatMap { try? JSONDecoder().decode(SongFeatureSnapshot.self, from: $0) }
+        return TrackSummary(id: id, title: title, artist: object.value(forKey: "artist") as? String ?? "Unknown Artist", durationSeconds: duration, album: object.value(forKey: "album") as? String, genres: genres, language: object.value(forKey: "language") as? String, releaseYear: storedYear.map(\.intValue), revision: revision.map(\.int64Value), contentClassifications: classifications, songFeatures: songFeatures)
     }
 
     private static func track(id: UUID, context: NSManagedObjectContext) throws -> NSManagedObject {
@@ -146,6 +180,17 @@ public final class CatalogStore: @unchecked Sendable {
                   track.revision >= 0,
                   track.durationMilliseconds.map({ $0 >= 0 }) ?? true,
                   track.releaseYear.map({ (1000...3000).contains($0) }) ?? true else { throw CatalogStoreError.invalidTrack }
+            if let features = track.songFeatures {
+                guard features.schemaVersion == 1,
+                      features.analysisRevision >= 0,
+                      !features.provider.isEmpty,
+                      !features.modelVersion.isEmpty,
+                      features.embedding.encoding == "float16_le",
+                      (1...128).contains(features.embedding.dimension),
+                      features.embedding.payload.count == features.embedding.dimension * 2,
+                      features.scalars.count <= 32,
+                      features.scalars.values.allSatisfy(\.isFinite) else { throw CatalogStoreError.invalidTrack }
+            }
         }
     }
 
@@ -158,6 +203,7 @@ public final class CatalogStore: @unchecked Sendable {
             attribute("genres", .stringAttributeType), attribute("language", .stringAttributeType), attribute("releaseYear", .integer32AttributeType),
             attribute("durationMilliseconds", .integer64AttributeType), attribute("available", .booleanAttributeType, optional: false, defaultValue: false),
             attribute("contentClassifications", .binaryDataAttributeType),
+            attribute("songFeatures", .binaryDataAttributeType),
         ]
         track.uniquenessConstraints = [["id"]]
         track.indexes = ["id", "title", "artist", "album", "genres", "language", "releaseYear", "available"].compactMap { name in

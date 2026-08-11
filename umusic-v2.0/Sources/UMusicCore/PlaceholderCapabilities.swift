@@ -29,6 +29,7 @@ public actor PlaceholderPlaybackController: PlaybackControlling {
     public func enqueue(_ track: TrackSummary, placement: QueuePlacement, origin: QueueItemOrigin) async {}
     public func setQueue(_ tracks: [TrackSummary], startingAt index: Int) async {}
     public func setAutomaticQueue(_ tracks: [TrackSummary], startingAt index: Int) async {}
+    public func reconcileQueue(availableTracks: [TrackSummary]) async {}
     public func removeQueueItem(id: UUID) async {}
     public func moveQueueItems(fromOffsets: IndexSet, toOffset: Int) async {}
     public func checkpoint() async {}
@@ -114,6 +115,7 @@ public actor PlaceholderOfflineManager: OfflineManaging {
     }
     public func download(_ track: TrackSummary, retention: OfflineRetention) async throws {}
     public func removeDownload(trackID: UUID) async throws {}
+    public func removeAllDownloads() async throws {}
     public func setQuota(bytes: Int64) async throws {}
     public func setAllowsCellular(_ allowed: Bool) async {}
     public func reconcile() async {}

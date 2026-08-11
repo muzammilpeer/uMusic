@@ -56,7 +56,7 @@ struct UMusicV2App: App {
             let token = try await client.authentication.validAccessToken()
             let credentials = SharedKeychainImportCredentialStore(accessGroup: importAccessGroup)
             try await credentials.save(.init(server: server, accessToken: token))
-            let handoff = try AppGroupImportHandoff(suiteName: "group.uk.muzammilpeer.umusic.v2")
+            let handoff = try AppGroupImportHandoff(suiteName: "group.uk.muzammilpeer.umusic")
             _ = try await ImportHandoffProcessor(handoff: handoff, credentials: credentials, client: URLSessionImportJobClient()).submitPending()
         } catch {
             // Pending jobs remain in the App Group for the next foreground retry.

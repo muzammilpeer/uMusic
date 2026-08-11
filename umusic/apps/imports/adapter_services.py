@@ -27,7 +27,10 @@ def _require(adapter: str) -> None:
 def _ingest_path(path: Path, owner: User) -> bool:
     with path.open("rb") as source:
         job = quarantine_upload(cast(UploadedFile, File(source, name=path.name)), owner)
-    return process_import(job).status in {"completed", "duplicate"}
+    completed = process_import(job)
+    if completed.status not in {"completed", "duplicate"}:
+        raise RuntimeError(completed.error_code or "MP3_IMPORT_FAILED")
+    return True
 
 
 def import_folder(owner: User, folder: str) -> AdapterJob:

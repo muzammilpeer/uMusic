@@ -1,0 +1,529 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 60;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		A10000000000000000000001 /* App/UMusicV2App.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000002 /* App/UMusicV2App.swift */; };
+		A10000000000000000000003 /* UMusicCore in Frameworks */ = {isa = PBXBuildFile; productRef = A10000000000000000000004 /* UMusicCore */; };
+		A10000000000000000000005 /* UMusicPresentation in Frameworks */ = {isa = PBXBuildFile; productRef = A10000000000000000000006 /* UMusicPresentation */; };
+		A10000000000000000000007 /* UMusicOffline in Frameworks */ = {isa = PBXBuildFile; productRef = A10000000000000000000008 /* UMusicOffline */; };
+		A10000000000000000000009 /* UMusicImportClient in Frameworks */ = {isa = PBXBuildFile; productRef = A1000000000000000000000A /* UMusicImportClient */; };
+		A1000000000000000000000B /* Extensions/UMusicShareExtension/ShareViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000000C /* Extensions/UMusicShareExtension/ShareViewController.swift */; };
+		A1000000000000000000000D /* UMusicImportClient in Frameworks */ = {isa = PBXBuildFile; productRef = A1000000000000000000000A /* UMusicImportClient */; };
+		A1000000000000000000000E /* UMusicShareExtension.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = A1000000000000000000000F /* UMusicShareExtension.appex */; platformFilter = ios; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		A10000000000000000000010 /* ../UMusicDataInspector/UMusicDataInspectorApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000011 /* ../UMusicDataInspector/UMusicDataInspectorApp.swift */; };
+		A10000000000000000000012 /* UMusicInspector in Frameworks */ = {isa = PBXBuildFile; productRef = A10000000000000000000013 /* UMusicInspector */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		A10000000000000000000014 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A10000000000000000000015 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = A10000000000000000000016;
+			remoteInfo = UMusicShareExtension;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		A10000000000000000000017 /* Embed App Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				A1000000000000000000000E /* UMusicShareExtension.appex in Embed App Extensions */,
+			);
+			name = "Embed App Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		A10000000000000000000002 /* App/UMusicV2App.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/UMusicV2App.swift; sourceTree = "<group>"; };
+		A1000000000000000000000C /* Extensions/UMusicShareExtension/ShareViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Extensions/UMusicShareExtension/ShareViewController.swift; sourceTree = "<group>"; };
+		A1000000000000000000000F /* UMusicShareExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = UMusicShareExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		A10000000000000000000011 /* ../UMusicDataInspector/UMusicDataInspectorApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ../UMusicDataInspector/UMusicDataInspectorApp.swift; sourceTree = "<group>"; };
+		A10000000000000000000018 /* UMusic.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = UMusic.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A10000000000000000000019 /* UMusicDataInspector.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = UMusicDataInspector.app; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		A1000000000000000000001A /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A10000000000000000000003 /* UMusicCore in Frameworks */,
+				A10000000000000000000005 /* UMusicPresentation in Frameworks */,
+				A10000000000000000000007 /* UMusicOffline in Frameworks */,
+				A10000000000000000000009 /* UMusicImportClient in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A1000000000000000000001B /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A1000000000000000000000D /* UMusicImportClient in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A1000000000000000000001C /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A10000000000000000000012 /* UMusicInspector in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		A1000000000000000000001D = {
+			isa = PBXGroup;
+			children = (
+				A1000000000000000000001E /* Sources */,
+				A1000000000000000000001F /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		A1000000000000000000001E /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				A10000000000000000000002 /* App/UMusicV2App.swift */,
+				A1000000000000000000000C /* Extensions/UMusicShareExtension/ShareViewController.swift */,
+				A10000000000000000000011 /* ../UMusicDataInspector/UMusicDataInspectorApp.swift */,
+			);
+			name = Sources;
+			sourceTree = "<group>";
+		};
+		A1000000000000000000001F /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				A10000000000000000000018 /* UMusic.app */,
+				A1000000000000000000000F /* UMusicShareExtension.appex */,
+				A10000000000000000000019 /* UMusicDataInspector.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		A10000000000000000000016 /* UMusicShareExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A10000000000000000000025 /* Build configuration list for PBXNativeTarget "UMusicShareExtension" */;
+			buildPhases = (
+				A10000000000000000000026 /* Sources */,
+				A1000000000000000000001B /* Frameworks */,
+				A10000000000000000000027 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = UMusicShareExtension;
+			packageProductDependencies = (
+				A1000000000000000000000A /* UMusicImportClient */,
+			);
+			productName = UMusicShareExtension;
+			productReference = A1000000000000000000000F /* UMusicShareExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+		A10000000000000000000020 /* UMusic */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A10000000000000000000021 /* Build configuration list for PBXNativeTarget "UMusic" */;
+			buildPhases = (
+				A10000000000000000000022 /* Sources */,
+				A1000000000000000000001A /* Frameworks */,
+				A10000000000000000000023 /* Resources */,
+				A10000000000000000000017 /* Embed App Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				A10000000000000000000024 /* PBXTargetDependency */,
+			);
+			name = UMusic;
+			packageProductDependencies = (
+				A10000000000000000000004 /* UMusicCore */,
+				A10000000000000000000006 /* UMusicPresentation */,
+				A10000000000000000000008 /* UMusicOffline */,
+				A1000000000000000000000A /* UMusicImportClient */,
+			);
+			productName = UMusic;
+			productReference = A10000000000000000000018 /* UMusic.app */;
+			productType = "com.apple.product-type.application";
+		};
+		A10000000000000000000028 /* UMusicDataInspector */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A10000000000000000000029 /* Build configuration list for PBXNativeTarget "UMusicDataInspector" */;
+			buildPhases = (
+				A1000000000000000000002A /* Sources */,
+				A1000000000000000000001C /* Frameworks */,
+				A1000000000000000000002B /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = UMusicDataInspector;
+			packageProductDependencies = (
+				A10000000000000000000013 /* UMusicInspector */,
+			);
+			productName = UMusicDataInspector;
+			productReference = A10000000000000000000019 /* UMusicDataInspector.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		A10000000000000000000015 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 2660;
+				LastUpgradeCheck = 2660;
+				TargetAttributes = {
+					A10000000000000000000016 = {
+						CreatedOnToolsVersion = 26.0;
+					};
+					A10000000000000000000020 = {
+						CreatedOnToolsVersion = 26.0;
+					};
+					A10000000000000000000028 = {
+						CreatedOnToolsVersion = 26.0;
+					};
+				};
+			};
+			buildConfigurationList = A1000000000000000000002C /* Build configuration list for PBXProject "UMusicApp" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = A1000000000000000000001D;
+			packageReferences = (
+				A1000000000000000000002D /* XCLocalSwiftPackageReference "../.." */,
+			);
+			productRefGroup = A1000000000000000000001F /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				A10000000000000000000020 /* UMusic */,
+				A10000000000000000000016 /* UMusicShareExtension */,
+				A10000000000000000000028 /* UMusicDataInspector */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		A10000000000000000000023 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A10000000000000000000027 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A1000000000000000000002B /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		A10000000000000000000022 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A10000000000000000000001 /* App/UMusicV2App.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A10000000000000000000026 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A1000000000000000000000B /* Extensions/UMusicShareExtension/ShareViewController.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A1000000000000000000002A /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A10000000000000000000010 /* ../UMusicDataInspector/UMusicDataInspectorApp.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		A10000000000000000000024 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = A10000000000000000000016 /* UMusicShareExtension */;
+			targetProxy = A10000000000000000000014 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		A10000000000000000000030 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				SWIFT_VERSION = 6.0;
+			};
+			name = Debug;
+		};
+		A10000000000000000000031 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_VERSION = 6.0;
+			};
+			name = Release;
+		};
+		A10000000000000000000032 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				"CODE_SIGN_ENTITLEMENTS[sdk=iphoneos*]" = Configuration/UMusicApp.entitlements;
+				"CODE_SIGN_ENTITLEMENTS[sdk=iphonesimulator*]" = Configuration/UMusicApp.entitlements;
+				"CODE_SIGN_ENTITLEMENTS[sdk=macosx*]" = Configuration/UMusicMac.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 19;
+				DEVELOPMENT_TEAM = 3S2DR3CGY4;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = "Configuration/App-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 2.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = uk.muzammilpeer.umusic;
+				PRODUCT_NAME = UMusic;
+				SDKROOT = auto;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		A10000000000000000000033 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				"CODE_SIGN_ENTITLEMENTS[sdk=iphoneos*]" = Configuration/UMusicApp.entitlements;
+				"CODE_SIGN_ENTITLEMENTS[sdk=iphonesimulator*]" = Configuration/UMusicApp.entitlements;
+				"CODE_SIGN_ENTITLEMENTS[sdk=macosx*]" = Configuration/UMusicMac.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 19;
+				DEVELOPMENT_TEAM = 3S2DR3CGY4;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = "Configuration/App-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 2.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = uk.muzammilpeer.umusic;
+				PRODUCT_NAME = UMusic;
+				SDKROOT = auto;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		A10000000000000000000034 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = Extensions/UMusicShareExtension/UMusicShareExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 19;
+				DEVELOPMENT_TEAM = 3S2DR3CGY4;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = "Configuration/Share-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 2.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = uk.muzammilpeer.umusic.share;
+				PRODUCT_NAME = UMusicShareExtension;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		A10000000000000000000035 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = Extensions/UMusicShareExtension/UMusicShareExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 19;
+				DEVELOPMENT_TEAM = 3S2DR3CGY4;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = "Configuration/Share-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 2.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = uk.muzammilpeer.umusic.share;
+				PRODUCT_NAME = UMusicShareExtension;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		A10000000000000000000036 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = Configuration/Inspector.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 19;
+				DEVELOPMENT_TEAM = 3S2DR3CGY4;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = "Configuration/Inspector-Info.plist";
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 2.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = uk.muzammilpeer.umusic.inspector;
+				PRODUCT_NAME = UMusicDataInspector;
+				SDKROOT = macosx;
+				SUPPORTED_PLATFORMS = macosx;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 6.0;
+			};
+			name = Debug;
+		};
+		A10000000000000000000037 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = Configuration/Inspector.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 19;
+				DEVELOPMENT_TEAM = 3S2DR3CGY4;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = "Configuration/Inspector-Info.plist";
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 2.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = uk.muzammilpeer.umusic.inspector;
+				PRODUCT_NAME = UMusicDataInspector;
+				SDKROOT = macosx;
+				SUPPORTED_PLATFORMS = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 6.0;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		A10000000000000000000021 /* Build configuration list for PBXNativeTarget "UMusic" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A10000000000000000000032 /* Debug */,
+				A10000000000000000000033 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		A10000000000000000000025 /* Build configuration list for PBXNativeTarget "UMusicShareExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A10000000000000000000034 /* Debug */,
+				A10000000000000000000035 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		A10000000000000000000029 /* Build configuration list for PBXNativeTarget "UMusicDataInspector" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A10000000000000000000036 /* Debug */,
+				A10000000000000000000037 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		A1000000000000000000002C /* Build configuration list for PBXProject "UMusicApp" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A10000000000000000000030 /* Debug */,
+				A10000000000000000000031 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		A1000000000000000000002D /* XCLocalSwiftPackageReference "../.." */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../..;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		A10000000000000000000004 /* UMusicCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A1000000000000000000002D /* XCLocalSwiftPackageReference "../.." */;
+			productName = UMusicCore;
+		};
+		A10000000000000000000006 /* UMusicPresentation */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A1000000000000000000002D /* XCLocalSwiftPackageReference "../.." */;
+			productName = UMusicPresentation;
+		};
+		A10000000000000000000008 /* UMusicOffline */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A1000000000000000000002D /* XCLocalSwiftPackageReference "../.." */;
+			productName = UMusicOffline;
+		};
+		A1000000000000000000000A /* UMusicImportClient */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A1000000000000000000002D /* XCLocalSwiftPackageReference "../.." */;
+			productName = UMusicImportClient;
+		};
+		A10000000000000000000013 /* UMusicInspector */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A1000000000000000000002D /* XCLocalSwiftPackageReference "../.." */;
+			productName = UMusicInspector;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = A10000000000000000000015 /* Project object */;
+}

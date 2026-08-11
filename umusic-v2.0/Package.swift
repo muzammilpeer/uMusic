@@ -11,12 +11,11 @@ let package = Package(
     products: [
         .library(name: "UMusicCore", type: .static, targets: ["UMusicCore"]),
         .library(name: "UMusicImportClient", type: .static, targets: ["UMusicImportClient"]),
+        .library(name: "UMusicOffline", targets: ["UMusicOffline"]),
         .library(name: "UMusicShareExtensionUI", targets: ["UMusicShareExtensionUI"]),
         .library(name: "UMusicPresentation", targets: ["UMusicPresentation"]),
         .library(name: "UMusicInspector", targets: ["UMusicInspector"]),
         .library(name: "UMusicMigration", targets: ["UMusicMigration"]),
-        .executable(name: "UMusicApp", targets: ["UMusicApp"]),
-        .executable(name: "UMusicDataInspector", targets: ["UMusicDataInspector"]),
     ],
     targets: [
         .target(name: "UMusicDomain"),
@@ -37,7 +36,15 @@ let package = Package(
                 "UMusicPlayback", "UMusicOffline", "UMusicContext", "UMusicLearning", "UMusicML",
                 "UMusicTelemetry", "UMusicSecurity",
             ],
-            resources: [.process("Resources")]
+            resources: [
+                .process("Resources/resource-manifest.json"),
+                .process("Resources/release-freeze.json"),
+                .process("Resources/ranker-feature-manifest.json"),
+                .process("Resources/ranker-trusted-keys.json"),
+                .process("Resources/ranker-training-report.json"),
+                .process("Resources/PrivacyInfo.xcprivacy"),
+                .copy("Resources/UMusicRanker.mlmodelc"),
+            ]
         ),
         .target(name: "UMusicImportClient", dependencies: ["UMusicSupport"]),
         .target(
@@ -49,12 +56,6 @@ let package = Package(
         .target(name: "UMusicInspector", dependencies: ["UMusicDomain", "UMusicSupport"]),
         .target(name: "UMusicMigration", dependencies: ["UMusicDomain", "UMusicSupport"]),
         .target(name: "UMusicPresentation", dependencies: ["UMusicCore"]),
-        .executableTarget(
-            name: "UMusicApp",
-            dependencies: ["UMusicPresentation", "UMusicOffline", "UMusicImportClient"],
-            path: "Apps/UMusicApp/App"
-        ),
-        .executableTarget(name: "UMusicDataInspector", dependencies: ["UMusicInspector"], path: "Apps/UMusicDataInspector"),
         .testTarget(name: "UMusicCoreTests", dependencies: ["UMusicCore", "UMusicContext", "UMusicData", "UMusicDomain", "UMusicLearning", "UMusicML", "UMusicNetworking", "UMusicOffline", "UMusicSecurity", "UMusicSupport", "UMusicTelemetry"]),
         .testTarget(name: "ArchitectureTests", dependencies: ["UMusicCore"]),
         .testTarget(name: "UMusicPresentationTests", dependencies: ["UMusicPresentation"]),

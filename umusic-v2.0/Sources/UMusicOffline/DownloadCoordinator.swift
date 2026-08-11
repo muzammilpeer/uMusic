@@ -26,8 +26,11 @@ public final class BackgroundMediaDownloadTransport: NSObject, MediaDownloadTran
     private let delegate: BackgroundDownloadDelegate
     private let unmeteredSession: URLSession
     private let cellularSession: URLSession
+    private let foregroundSession: URLSession
+    private let stagingDirectory: URL
 
     public init(identifier: String, stagingDirectory: URL) {
+        self.stagingDirectory = stagingDirectory
         let stream = AsyncStream<DownloadedMedia>.makeStream()
         recoveredDownloads = stream.stream
         delegate = BackgroundDownloadDelegate(stagingDirectory: stagingDirectory, recovered: stream.continuation)
@@ -39,17 +42,41 @@ public final class BackgroundMediaDownloadTransport: NSObject, MediaDownloadTran
         cellular.isDiscretionary = false
         unmeteredSession = URLSession(configuration: unmetered, delegate: delegate, delegateQueue: nil)
         cellularSession = URLSession(configuration: cellular, delegate: delegate, delegateQueue: nil)
+        // Match the proven v1 offline transport. Async download(for:) is a
+        // foreground API and must use a default configuration, not a background
+        // session or the playback session singleton.
+        let foreground = URLSessionConfiguration.default
+        foreground.waitsForConnectivity = true
+        foreground.timeoutIntervalForRequest = 60
+        foreground.timeoutIntervalForResource = 60 * 60
+        // A user-triggered full-library refresh runs a bounded worker per active
+        // processor. Match URLSession's per-host allowance to that worker pool so
+        // the transport does not silently serialize those downloads.
+        foreground.httpMaximumConnectionsPerHost = max(1, ProcessInfo.processInfo.activeProcessorCount)
+        foreground.isDiscretionary = false
+        foregroundSession = URLSession(configuration: foreground)
         super.init()
     }
 
     public func download(_ request: MediaDownloadRequest, allowsCellular: Bool) async throws -> DownloadedMedia {
-        let session = allowsCellular ? cellularSession : unmeteredSession
-        return try await withCheckedThrowingContinuation { continuation in
-            let task = session.downloadTask(with: request.ticket.url)
-            task.taskDescription = try? String(data: JSONEncoder().encode(request), encoding: .utf8)
-            delegate.register(taskIdentifier: task.taskIdentifier, continuation: continuation)
-            task.resume()
+        // Playback tickets are deliberately short lived. Start user-requested
+        // downloads immediately rather than allowing a background session to defer
+        // the request until after its signed URL expires. Existing background tasks
+        // from older builds are still restored and committed by restoreTasks().
+        return try await foregroundDownload(request, allowsCellular: allowsCellular)
+    }
+
+    private func foregroundDownload(_ request: MediaDownloadRequest, allowsCellular: Bool) async throws -> DownloadedMedia {
+        var urlRequest = URLRequest(url: request.ticket.url)
+        urlRequest.allowsCellularAccess = allowsCellular
+        let (temporaryURL, response) = try await foregroundSession.download(for: urlRequest)
+        guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode) else {
+            throw OfflineDownloadError.unsuccessfulResponse
         }
+        try FileManager.default.createDirectory(at: stagingDirectory, withIntermediateDirectories: true)
+        let stable = stagingDirectory.appending(path: "\(UUID().uuidString).download")
+        try FileManager.default.moveItem(at: temporaryURL, to: stable)
+        return DownloadedMedia(request: request, temporaryURL: stable)
     }
 
     public func restoreTasks() async {
@@ -184,6 +211,21 @@ public actor DownloadCoordinator: OfflineManaging, CachedMediaLocating {
         }
     }
 
+    public func removeAllDownloads() async throws {
+        for task in active.values { task.cancel() }
+        active.removeAll()
+        for trackID in Array(entries.keys) {
+            guard let entry = entries[trackID] else { continue }
+            let file = root.appending(path: entry.relativePath)
+            if FileManager.default.fileExists(atPath: file.path) {
+                try FileManager.default.removeItem(at: file)
+            }
+            entries.removeValue(forKey: trackID)
+        }
+        currentTrackID = nil
+        await persistIndex()
+    }
+
     public func setQuota(bytes: Int64) async throws {
         guard bytes >= 0 else { throw OfflineDownloadError.invalidQuota }
         let old = quotaBytes; quotaBytes = bytes
@@ -285,4 +327,19 @@ private struct StoredOfflineIndex: Codable {
     static let empty = StoredOfflineIndex(schemaVersion: 1, entries: [], quotaBytes: 0, allowsCellular: false, hasPolicy: false)
 }
 
-public enum OfflineDownloadError: Error { case invalidTaskMetadata, expiredTicket, sizeMismatch, checksumMismatch, quotaExceeded, invalidQuota, currentlyPlaying }
+public enum OfflineDownloadError: Error, LocalizedError {
+    case invalidTaskMetadata, expiredTicket, unsuccessfulResponse, sizeMismatch, checksumMismatch, quotaExceeded, invalidQuota, currentlyPlaying
+
+    public var errorDescription: String? {
+        switch self {
+        case .invalidTaskMetadata: "The restored download metadata is invalid."
+        case .expiredTicket: "The server download ticket expired."
+        case .unsuccessfulResponse: "The server rejected the media download."
+        case .sizeMismatch: "The downloaded file size did not match the server metadata."
+        case .checksumMismatch: "The downloaded file failed integrity verification."
+        case .quotaExceeded: "The offline storage quota is too small."
+        case .invalidQuota: "The offline storage quota is invalid."
+        case .currentlyPlaying: "The currently playing download cannot be removed."
+        }
+    }
+}

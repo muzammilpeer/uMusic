@@ -4,6 +4,7 @@ from rest_framework.test import APIClient, APITestCase
 from umusic.apps.accounts.models import User
 from umusic.apps.accounts.v2_api import _issue_session
 from umusic.apps.library.models import Album, Artist, AudioFile, LibraryMembership, Track
+from umusic.apps.library.audio_analysis import analyze_track
 
 
 class V2LibraryChangesTests(APITestCase):
@@ -93,3 +94,20 @@ class V2LibraryChangesTests(APITestCase):
                 {"category": "quran", "confidence": 1},
             ],
         )
+
+    def test_successful_song_features_are_bounded_and_owner_scoped(self) -> None:
+        track = self.make_track("Analyzed", self.owner)
+        private = self.make_track("PrivateAnalysis", self.other)
+        analyze_track(track.id)
+        analyze_track(private.id)
+
+        response = self.client.get("/api/v2/library/changes")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.data["tracks"]), 1)
+        features = response.data["tracks"][0]["song_features"]
+        self.assertEqual(features["schema_version"], 1)
+        self.assertEqual(features["provider"], "deterministic")
+        self.assertEqual(features["embedding"]["dimension"], 64)
+        self.assertEqual(features["embedding"]["encoding"], "float16_le")
+        self.assertLessEqual(len(features["embedding"]["payload"]), 256)

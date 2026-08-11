@@ -80,6 +80,30 @@ func duplicateQueueItemsRemainDistinct() async {
     #expect(Set(preparing?.queue.map(\.id) ?? []).count == 2)
 }
 
+@MainActor @Test("Empty authoritative library clears restored playback queue")
+func emptyLibraryClearsRestoredQueue() async {
+    let store = MemoryQueueSnapshotStore()
+    let restored = DurableQueueSnapshot(
+        items: playbackTracks.map { QueueItem(track: $0, origin: .automatic) },
+        currentIndex: 0,
+        positionSeconds: 30,
+        sourceIdentity: .cached
+    )
+    let coordinator = PlaybackCoordinator(
+        engine: PlaybackEngineSpy(),
+        tickets: TicketAPIStub(),
+        cache: CacheStub(),
+        authentication: PlaybackAuthenticationStub(),
+        snapshotStore: store,
+        restoredSnapshot: restored
+    )
+    await coordinator.reconcileQueue(availableTracks: [])
+
+    let cleared = await coordinator.currentSnapshot()
+    #expect(cleared == .idle)
+    #expect(await store.value() == nil)
+}
+
 @MainActor @Test("Position ticks checkpoint no more often than the fifteen-second boundary")
 func checkpointWriteBudget() async {
     let engine = PlaybackEngineSpy(); let store = MemoryQueueSnapshotStore()

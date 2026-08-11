@@ -9,6 +9,19 @@ private func learningURL(_ name: String = UUID().uuidString) -> URL {
 
 private let learningTrack = TrackSummary(id: UUID(uuidString: "10000000-0000-0000-0000-000000000001")!, title: "Safe title", artist: "Safe artist", durationSeconds: 200)
 
+@Test("Current and paused playback appears in recent history before the track ends")
+func activePlaybackAppearsInHistory() async {
+    let store = LocalLearningStore(url: learningURL())
+    await store.record(.started(track: learningTrack, positionSeconds: 0))
+    await store.record(.checkpoint(positionSeconds: 16, durationSeconds: 200))
+    var history = await store.recentHistory(lastCalendarDays: 10, now: Date(), calendar: .current)
+    #expect(history.flatMap(\.entries).map(\.track.id) == [learningTrack.id])
+
+    await store.record(.paused(positionSeconds: 16))
+    history = await store.recentHistory(lastCalendarDays: 10, now: Date(), calendar: .current)
+    #expect(history.flatMap(\.entries).map(\.track.id) == [learningTrack.id])
+}
+
 @Test("A fifteen-second checkpoint survives a simulated process restart without tick events")
 func learningCrashCheckpoint() async throws {
     let url = learningURL()

@@ -14,6 +14,7 @@ public protocol PlaybackControlling: Sendable {
     func enqueue(_ track: TrackSummary, placement: QueuePlacement, origin: QueueItemOrigin) async
     func setQueue(_ tracks: [TrackSummary], startingAt index: Int) async
     func setAutomaticQueue(_ tracks: [TrackSummary], startingAt index: Int) async
+    func reconcileQueue(availableTracks: [TrackSummary]) async
     func removeQueueItem(id: UUID) async
     func moveQueueItems(fromOffsets: IndexSet, toOffset: Int) async
     func checkpoint() async
@@ -82,6 +83,7 @@ public protocol OfflineManaging: Sendable {
     func storageSnapshot() async -> OfflineStorageSnapshot
     func download(_ track: TrackSummary, retention: OfflineRetention) async throws
     func removeDownload(trackID: UUID) async throws
+    func removeAllDownloads() async throws
     func setQuota(bytes: Int64) async throws
     func setAllowsCellular(_ allowed: Bool) async
     func reconcile() async

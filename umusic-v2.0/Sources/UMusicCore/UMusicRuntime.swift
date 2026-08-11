@@ -7,6 +7,7 @@ import UMusicOffline
 import UMusicPlayback
 import UMusicSecurity
 import UMusicLearning
+import UMusicML
 
 public enum UMusicCoreVersion {
     public static let current = "2.0.0-alpha.19"
@@ -107,7 +108,22 @@ public enum UMusicCompositionRoot {
             authentication: authentication
         )
         Task { await offline.reconcile() }
-        let learning = LocalLearningStore(url: catalogURL.deletingLastPathComponent().appending(path: "Learning-v1.json"))
+        let bundledRanker: BundledRanker?
+        let modelLoadIssue: String?
+        do {
+            bundledRanker = try UMusicResources.bundledRanker()
+            modelLoadIssue = nil
+        } catch let error as ModelRankerError {
+            bundledRanker = nil
+            modelLoadIssue = Self.modelIssueCode(error)
+        } catch {
+            bundledRanker = nil
+            modelLoadIssue = "MODEL_LOAD_UNAVAILABLE"
+        }
+        if let lifecycle = bundledRanker?.lifecycle {
+            Task { try? await lifecycle.activate() }
+        }
+        let learning = LocalLearningStore(url: catalogURL.deletingLastPathComponent().appending(path: "Learning-v1.json"), modelRanker: bundledRanker?.lifecycle)
         let context = ContextCoordinator(settingsURL: catalogURL.deletingLastPathComponent().appending(path: "ContextSettings-v1.json"), learning: learning)
         let calendarPreferences = CalendarPlaylistCoordinator(url: catalogURL.deletingLastPathComponent().appending(path: "CalendarPreferences-v1.json"), playlists: playlists, library: library)
         let recommendationQueue = RecommendationQueueProvider(library: library, personalization: learning, offline: offline)
@@ -128,9 +144,19 @@ public enum UMusicCompositionRoot {
             playlists: playlists,
             personalization: learning,
             offline: offline,
-            diagnostics: LocalDiagnosticsProvider(),
+            diagnostics: LocalDiagnosticsProvider(modelRanker: bundledRanker?.lifecycle, modelLoadIssue: modelLoadIssue),
             context: context,
             calendarPreferences: calendarPreferences
         )
+    }
+
+    private static func modelIssueCode(_ error: ModelRankerError) -> String {
+        switch error {
+        case .badSignature: "MODEL_BAD_SIGNATURE"
+        case .corruptModel: "MODEL_CORRUPT"
+        case .incompatibleSchema: "MODEL_SCHEMA_INCOMPATIBLE"
+        case .incompatibleOS: "MODEL_OS_INCOMPATIBLE"
+        default: "MODEL_LOAD_UNAVAILABLE"
+        }
     }
 }
